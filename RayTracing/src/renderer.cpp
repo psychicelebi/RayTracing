@@ -76,7 +76,7 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 
 	if (scene.spheres.size() == 0)
 	{
-		return { 0, 0, 0, 1 };
+		return { 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 
 	const sphere* closest_sphere = nullptr;
@@ -97,7 +97,10 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 
 		if (float discriminant = b * b - 4.0f * a * c; discriminant >= 0)
 		{
-			float t = (-b - sqrt(discriminant)) / (2.0f * a);
+			float q = -0.5f * (b > 0) ? (b + sqrt(discriminant)) : -0.5f * (b - sqrt(discriminant)); // ensures calculation is numerically stable
+
+			float t = std::min(q / a, c / q); // t is the entry point
+			t = std::max(t, 0.0f); 
 
 			if (t < hit_distance)
 			{
@@ -110,7 +113,7 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 	if (closest_sphere != nullptr)
 	{
 		glm::vec3 hit_point = ray.origin + hit_distance * ray.direction;
-		glm::vec3 hit_point_normal = (hit_point - closest_sphere->centre) / closest_sphere->radius;
+		glm::vec3 hit_point_normal = normalize(hit_point - closest_sphere->centre);
 
 		glm::vec3 light_direction = normalize(m_light_position_ - hit_point);
 		float light_intensity = glm::max(dot(hit_point_normal, light_direction), 0.0f);
@@ -118,5 +121,5 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 		return { closest_sphere->albedo * light_intensity, 1.0f };
 	}
 
-	return {0, 0, 0, 1};
+	return { 0.0f, 0.0f, 0.0f, 1.0f };
 }
