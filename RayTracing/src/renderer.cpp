@@ -38,8 +38,8 @@ void renderer::on_resize(uint32_t width, uint32_t height)
 
 void renderer::render(const scene& scene, const camera& camera)
 {
-	ray ray;
-	ray.origin = camera.get_position();
+	m_active_camera_ = &camera;
+	m_active_scene_ = &scene;
 
 	// render every pixel
 
@@ -47,10 +47,7 @@ void renderer::render(const scene& scene, const camera& camera)
 	{
 		for (uint32_t x = 0; x < m_final_image_->GetWidth(); x++)
 		{
-			ray.direction = camera.get_ray_direction()[x + y * m_final_image_->GetWidth()];
-
-
-			glm::vec4 color = trace_ray(scene, ray);
+			glm::vec4 color = per_pixel(x, y);
 			color = clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
 			m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(color);
 		}
@@ -60,29 +57,61 @@ void renderer::render(const scene& scene, const camera& camera)
 	m_final_image_->SetData(m_image_data_);
 }
 
-glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
+renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
 {
-	/*
-	|| UV Gradient ||
+	renderer::hit_info hit_info;
+	hit_info.hit_distance = hit_distance;
+	hit_info.object_index = object_index;
 
-	uint8_t red = (uint8_t)(coord.x * 255.0f);
-	uint8_t green = (uint8_t)(coord.y * 255.0f);
-	// uint8_t blue = (uint8_t)(((coord.y + coord.x))/2 * 255.0f);
 
-	return 0xff000000 | (green << 8) | red;
-	*/
+	const sphere& closest_sphere = m_active_scene_->spheres[object_index];
 
-	// ray_direction = glm::normalize(ray_direction); // more expensive
+	hit_info.world_position = ray.origin + hit_distance * ray.direction;
+	hit_info.world_normal = normalize(hit_info.world_position - closest_sphere.centre);
 
-	if (scene.spheres.size() == 0)
+	return hit_info;
+}
+
+renderer::hit_info renderer::miss(const ray& ray)
+{
+	hit_info hit_info;
+	hit_info.hit_distance = -1;
+	return hit_info;
+}
+
+glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
+{
+	ray ray;
+	ray.origin = m_active_camera_->get_position();
+	ray.direction = m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()];
+
+	hit_info hit_info = trace_ray(ray);
+	if (hit_info.hit_distance < 0.0f)
 	{
 		return { 0.0f, 0.0f, 0.0f, 1.0f };
 	}
 
-	const sphere* closest_sphere = nullptr;
+	glm::vec3 light_direction = normalize(m_active_scene_->light_position - hit_info.world_position);
+	float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
+
+	const sphere& closest_sphere = m_active_scene_->spheres[hit_info.object_index];
+	return { closest_sphere.albedo * light_intensity, 1.0f };
+}
+
+renderer::hit_info renderer::trace_ray(const ray& ray)
+{
+
+	// ray_direction = glm::normalize(ray_direction); // more expensive
+
+	if (m_active_scene_->spheres.size() == 0)
+	{
+		return miss(ray);
+	}
+
+	int closest_sphere = -1;
 	float hit_distance = FLT_MAX;
 
-	for (const sphere& sphere : scene.spheres)
+	for (size_t i = 0; i < m_active_scene_->spheres.size(); i++)
 	{
 		// (B.B)t^2 + 2(B.(A-C))t + ((A-C).(A-C) - r^2) = 0
 		// A = ray origin vector (camera)
@@ -91,13 +120,14 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 		// C = centre of sphere
 		// r = radius
 
+		const sphere& sphere = m_active_scene_->spheres[i];
 		float a = dot(ray.direction, ray.direction);
 		float b = 2.0f * dot(ray.direction, ray.origin - sphere.centre);
 		float c = dot(ray.origin - sphere.centre, ray.origin - sphere.centre) - sphere.radius * sphere.radius;
 
 		if (float discriminant = b * b - 4.0f * a * c; discriminant >= 0)
 		{
-			float q = -0.5f * (b > 0) ? (b + sqrt(discriminant)) : -0.5f * (b - sqrt(discriminant)); // ensures calculation is numerically stable
+			float q = (b > 0) ? -0.5f * (b + sqrt(discriminant)) : -0.5f * (b - sqrt(discriminant)); // ensures calculation is numerically stable
 
 			float t = std::min(q / a, c / q); // t is the entry point
 			t = std::max(t, 0.0f); 
@@ -105,21 +135,15 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 			if (t < hit_distance)
 			{
 				hit_distance = t;
-				closest_sphere = &sphere;
+				closest_sphere = (int)i;
 			}
 		}
 	}
 
-	if (closest_sphere != nullptr)
+	if (closest_sphere < 0)
 	{
-		glm::vec3 hit_point = ray.origin + hit_distance * ray.direction;
-		glm::vec3 hit_point_normal = normalize(hit_point - closest_sphere->centre);
-
-		glm::vec3 light_direction = normalize(scene.light_position - hit_point);
-		float light_intensity = glm::max(dot(hit_point_normal, light_direction), 0.0f);
-
-		return { closest_sphere->albedo * light_intensity, 1.0f };
+		return miss(ray);
 	}
 
-	return { 0.0f, 0.0f, 0.0f, 1.0f };
+	return closest_hit(ray, closest_sphere, hit_distance);
 }
