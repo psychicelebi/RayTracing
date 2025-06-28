@@ -115,7 +115,7 @@ glm::vec4 renderer::trace_ray(const scene& scene, const ray& ray)
 		glm::vec3 hit_point = ray.origin + hit_distance * ray.direction;
 		glm::vec3 hit_point_normal = normalize(hit_point - closest_sphere->centre);
 
-		glm::vec3 light_direction = normalize(m_light_position_ - hit_point);
+		glm::vec3 light_direction = normalize(scene.light_position - hit_point);
 		float light_intensity = glm::max(dot(hit_point_normal, light_direction), 0.0f);
 
 		return { closest_sphere->albedo * light_intensity, 1.0f };

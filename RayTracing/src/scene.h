@@ -12,4 +12,5 @@ struct sphere {
 
 struct scene {
 	std::vector<sphere> spheres;
+	glm::vec3 light_position{ 1.0f, 1.0f, 1.0f };
 };

@@ -12,12 +12,10 @@
 class renderer
 {
 public:
-	renderer() : m_light_position_(1.0f, 1.0f, 1.0f) {};
+	renderer() = default;
 
 	void on_resize(uint32_t width, uint32_t height);
 	void render(const scene& scence, const camera& camera);
-	
-	glm::vec3& get_light_position() { return m_light_position_; }
 
 	std::shared_ptr<Walnut::Image> get_final_image() const
 	{
@@ -27,7 +25,6 @@ public:
 private:
 	std::shared_ptr<Walnut::Image> m_final_image_;
 	uint32_t* m_image_data_ = nullptr;
-	glm::vec3 m_light_position_;
 
 	glm::vec4 trace_ray(const scene& scene, const ray& ray);
 };

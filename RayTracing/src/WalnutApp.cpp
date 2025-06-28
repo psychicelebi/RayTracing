@@ -36,9 +36,9 @@ public:
 		// move light
 		if (ImGui::CollapsingHeader("Light Source Controls"))
 		{
-			ImGui::SliderFloat("x", &m_Renderer.get_light_position().x, -10, 10);
-			ImGui::SliderFloat("y", &m_Renderer.get_light_position().y, -10, 10);
-			ImGui::SliderFloat("z", &m_Renderer.get_light_position().z, -10, 10);
+			ImGui::SliderFloat("x", &m_Scene.light_position.x, -10, 10);
+			ImGui::SliderFloat("y", &m_Scene.light_position.y, -10, 10);
+			ImGui::SliderFloat("z", &m_Scene.light_position.z, -10, 10);
 		}
 		ImGui::End();
 
