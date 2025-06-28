@@ -15,22 +15,7 @@ class ExampleLayer : public Walnut::Layer
 {
 public:
 	ExampleLayer()
-		: m_Camera(60.0f, 0.1f, 100.0f) 
-	{
-		{
-			sphere sphere;
-			sphere.centre = { 0.0f, 0.0f, -2.0f };
-			m_Scene.spheres.push_back(sphere);
-		}
-
-		{
-			sphere sphere;
-			sphere.centre = { 1.5f, 0.0f, -5.0f };
-			sphere.albedo = { 1.0f, 1.5f, 1.0f };
-
-			m_Scene.spheres.push_back(sphere);
-		}
-	}
+		: m_Camera(60.0f, 0.1f, 100.0f) {}
 
 	virtual void OnUpdate(float ts)
 	{
@@ -59,6 +44,11 @@ public:
 
 		ImGui::Begin("Scene");
 
+		if (ImGui::Button("New Sphere")) {
+			sphere sphere;
+			m_Scene.spheres.push_back(sphere);
+		}
+
 		for (size_t i = 0; i < m_Scene.spheres.size(); i++)
 		{
 			ImGui::PushID(i);
@@ -71,6 +61,7 @@ public:
 
 			ImGui::PopID();
 		}
+
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));

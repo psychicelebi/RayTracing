@@ -5,7 +5,7 @@
 
 
 struct sphere {
-	glm::vec3 centre{0.0f};
+	glm::vec3 centre{0.0f, 0.0f, -2.0f};
 	float radius = 0.5f;
 	glm::vec3 albedo{ 1.0f };
 };
