@@ -1,6 +1,8 @@
 #include "renderer.h"
 #include "Walnut/Random.h"
 #include "math.h"
+#include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 namespace utils
 {
@@ -81,21 +83,37 @@ renderer::hit_info renderer::miss(const ray& ray)
 
 glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 {
-	ray ray;
-	ray.origin = m_active_camera_->get_position();
-	ray.direction = m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()];
+	ray ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()]) };
 
 	hit_info hit_info = trace_ray(ray);
-	if (hit_info.hit_distance < 0.0f)
+
+	int max_bounces = 2;
+	glm::vec3 final_albedo = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 attenuation = { 1.0f, 1.0f, 1.0f };
+	
+	for (int i = 0; i <= max_bounces; i++)
 	{
-		return { 0.0f, 0.0f, 0.0f, 1.0f };
+		if (hit_info.hit_distance < 0.0f)
+		{
+			final_albedo += attenuation * glm::vec3{ 1.0f, 0.0f, 0.0f };
+			break;
+		}
+
+		glm::vec3 light_direction = normalize(m_active_scene_->light_position - hit_info.world_position);
+		float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
+
+		const sphere& closest_sphere = m_active_scene_->spheres[hit_info.object_index];
+		final_albedo += attenuation * closest_sphere.albedo * light_intensity;
+		attenuation *= closest_sphere.albedo;
+		attenuation *= 0.7f;
+
+		ray.origin = hit_info.world_position + hit_info.world_normal * 0.001f;
+		ray.direction = reflect(ray.direction, hit_info.world_normal);
+
+		hit_info = trace_ray(ray);
 	}
 
-	glm::vec3 light_direction = normalize(m_active_scene_->light_position - hit_info.world_position);
-	float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
-
-	const sphere& closest_sphere = m_active_scene_->spheres[hit_info.object_index];
-	return { closest_sphere.albedo * light_intensity, 1.0f };
+	return { final_albedo, 1.0f };
 }
 
 renderer::hit_info renderer::trace_ray(const ray& ray)
@@ -130,9 +148,8 @@ renderer::hit_info renderer::trace_ray(const ray& ray)
 			float q = (b > 0) ? -0.5f * (b + sqrt(discriminant)) : -0.5f * (b - sqrt(discriminant)); // ensures calculation is numerically stable
 
 			float t = std::min(q / a, c / q); // t is the entry point
-			t = std::max(t, 0.0f); 
 
-			if (t < hit_distance)
+			if (t > 0 && t < hit_distance)
 			{
 				hit_distance = t;
 				closest_sphere = (int)i;
