@@ -95,20 +95,23 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	{
 		if (hit_info.hit_distance < 0.0f)
 		{
-			final_albedo += attenuation * glm::vec3{ 1.0f, 0.0f, 0.0f };
+			glm::vec3 sky_color = { 0.6f, 0.7f, 0.9f };
+			final_albedo += attenuation * sky_color;
 			break;
 		}
 
 		glm::vec3 light_direction = normalize(m_active_scene_->light_position - hit_info.world_position);
 		float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
 
-		const sphere& closest_sphere = m_active_scene_->spheres[hit_info.object_index];
-		final_albedo += attenuation * closest_sphere.albedo * light_intensity;
-		attenuation *= closest_sphere.albedo;
+		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
+		const material& material = m_active_scene_->materials[sphere.material_index];
+
+		final_albedo += attenuation * material.albedo * light_intensity;
+		attenuation *= material.albedo;
 		attenuation *= 0.7f;
 
 		ray.origin = hit_info.world_position + hit_info.world_normal * 0.001f;
-		ray.direction = reflect(ray.direction, hit_info.world_normal);
+		ray.direction = reflect(ray.direction, hit_info.world_normal + material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f));
 
 		hit_info = trace_ray(ray);
 	}

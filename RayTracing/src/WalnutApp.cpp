@@ -15,7 +15,10 @@ class ExampleLayer : public Walnut::Layer
 {
 public:
 	ExampleLayer()
-		: m_Camera(60.0f, 0.1f, 100.0f) {}
+		: m_Camera(60.0f, 0.1f, 100.0f) 
+	{
+		material& default_material = m_Scene.materials.emplace_back();
+	}
 
 	virtual void OnUpdate(float ts)
 	{
@@ -33,35 +36,83 @@ public:
 			Render();
 		}
 
-		// move light
-		if (ImGui::CollapsingHeader("Light Source Controls"))
-		{
-			ImGui::SliderFloat("x", &m_Scene.light_position.x, -10, 10);
-			ImGui::SliderFloat("y", &m_Scene.light_position.y, -10, 10);
-			ImGui::SliderFloat("z", &m_Scene.light_position.z, -10, 10);
-		}
 		ImGui::End();
 
 		ImGui::Begin("Scene");
 
-		if (ImGui::Button("New Sphere")) {
-			sphere sphere;
-			m_Scene.spheres.push_back(sphere);
+		// display materials
+		ImGui::Text("Materials");
+		ImGui::BeginChild("Materials", ImVec2(0,200), true);
+
+		for (size_t i = 0; i < m_Scene.materials.size(); i++)
+		{
+			ImGui::PushID(i);
+
+			std::string header_title = "Material #" + std::to_string(i);
+			if (i == 0)
+				header_title = "Default Material";
+
+			if (ImGui::CollapsingHeader(header_title.c_str()))
+			{
+				material& material = m_Scene.materials[i];
+				ImGui::ColorEdit3("Albedo", glm::value_ptr(material.albedo));
+				ImGui::DragFloat("Roughness", &material.roughness, 0.05f, 0.0f, 1.0f);
+				ImGui::DragFloat("Metallic", &material.metallic, 0.05f, 0.0f, 1.0f);
+
+				ImGui::Separator();
+			}
+
+			ImGui::PopID();
 		}
+
+		if (ImGui::Button("New Material"))
+		{
+			material material;
+			m_Scene.materials.push_back(material);
+		}
+
+		ImGui::EndChild();
+
+		// display spheres
+		ImGui::Text("Spheres");
+		ImGui::BeginChild("Spheres", ImVec2(0, 200), true);
 
 		for (size_t i = 0; i < m_Scene.spheres.size(); i++)
 		{
 			ImGui::PushID(i);
 
-			ImGui::DragFloat3("Centre", glm::value_ptr(m_Scene.spheres[i].centre), 0.1f);
-			ImGui::DragFloat("Radius", &m_Scene.spheres[i].radius, 0.1f);
-			ImGui::ColorEdit3("Albedo", glm::value_ptr(m_Scene.spheres[i].albedo));
+			std::string header_title = "Sphere #" + std::to_string(i + 1);
 
-			ImGui::Separator();
+			if (ImGui::CollapsingHeader(header_title.c_str()))
+			{
+				sphere& sphere = m_Scene.spheres[i];
+				ImGui::DragFloat3("Centre", glm::value_ptr(sphere.centre), 0.05f);
+				ImGui::DragFloat("Radius", &sphere.radius, 0.05f);
+				ImGui::DragInt("Material", &sphere.material_index, 1.0f, 0, (int)m_Scene.materials.size() - 1);
+
+				ImGui::Separator();
+			}
 
 			ImGui::PopID();
 		}
 
+		if (ImGui::Button("New Sphere"))
+		{
+			sphere sphere;
+			m_Scene.spheres.push_back(sphere);
+		}
+
+		ImGui::EndChild();
+
+		// move light
+		ImGui::Text("Light Source Controls");
+		ImGui::BeginChild("Light Source Controls", ImVec2(0, 200), true);
+
+		ImGui::SliderFloat("x", &m_Scene.light_position.x, -10, 10);
+		ImGui::SliderFloat("y", &m_Scene.light_position.y, -10, 10);
+		ImGui::SliderFloat("z", &m_Scene.light_position.z, -10, 10);
+
+		ImGui::EndChild();
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
