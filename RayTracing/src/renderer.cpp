@@ -87,11 +87,11 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 
 	hit_info hit_info = trace_ray(ray);
 
-	int max_bounces = 2;
+	int ray_depth = 5;
 	glm::vec3 final_albedo = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 attenuation = { 1.0f, 1.0f, 1.0f };
 	
-	for (int i = 0; i <= max_bounces; i++)
+	for (int i = 0; i <= ray_depth; i++)
 	{
 		if (hit_info.hit_distance < 0.0f)
 		{
