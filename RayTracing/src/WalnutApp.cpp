@@ -22,7 +22,8 @@ public:
 
 	virtual void OnUpdate(float ts)
 	{
-		m_Camera.on_update(ts);
+		if(m_Camera.on_update(ts))
+			m_Renderer.reset_frame_index();
 	}
 
 	virtual void OnUIRender() override
@@ -34,6 +35,13 @@ public:
 		if (ImGui::Button("Render"))
 		{
 			Render();
+		}
+
+		ImGui::Checkbox("Accumulate", &m_Renderer.get_settings().accumulate); 
+
+		if (ImGui::Button("Reset"))
+		{
+			m_Renderer.reset_frame_index();
 		}
 
 		ImGui::End();

@@ -16,15 +16,27 @@ public:
 
 	void on_resize(uint32_t width, uint32_t height);
 	void render(const scene& scence, const camera& camera);
+	void reset_frame_index() { m_frame_index_ = 1; }
 
 	std::shared_ptr<Walnut::Image> get_final_image() const
 	{
 		return m_final_image_;
 	}
 
+	struct settings
+	{
+		bool accumulate = true;
+	};
+	settings& get_settings() { return m_settings_; }
+
 private:
 	std::shared_ptr<Walnut::Image> m_final_image_;
 	uint32_t* m_image_data_ = nullptr;
+	glm::vec4* m_accumulation_data_ = nullptr;
+	uint32_t m_frame_index_ = 1;
+
+	settings m_settings_;
+
 	const scene* m_active_scene_ = nullptr;
 	const camera* m_active_camera_ = nullptr;
 

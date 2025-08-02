@@ -36,12 +36,20 @@ void renderer::on_resize(uint32_t width, uint32_t height)
 
 	delete[] m_image_data_;
 	m_image_data_ = new uint32_t[width * height];
+
+	delete[] m_accumulation_data_;
+	m_accumulation_data_ = new glm::vec4[width * height];
 }
 
 void renderer::render(const scene& scene, const camera& camera)
 {
 	m_active_camera_ = &camera;
 	m_active_scene_ = &scene;
+
+	if (m_frame_index_ == 1)
+	{
+		memset(m_accumulation_data_, 0, m_final_image_->GetWidth() * m_final_image_->GetHeight() * sizeof(glm::vec4));
+	}
 
 	// render every pixel
 
@@ -50,13 +58,27 @@ void renderer::render(const scene& scene, const camera& camera)
 		for (uint32_t x = 0; x < m_final_image_->GetWidth(); x++)
 		{
 			glm::vec4 color = per_pixel(x, y);
-			color = clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
-			m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(color);
+
+			m_accumulation_data_[y * m_final_image_->GetWidth() + x] += color;
+			glm::vec4 accumulated_colour = m_accumulation_data_[y * m_final_image_->GetWidth() + x];
+			accumulated_colour /= m_frame_index_;
+
+			accumulated_colour = clamp(accumulated_colour, glm::vec4(0.0f), glm::vec4(1.0f));
+			m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(accumulated_colour);
 		}
 	}
 
 
 	m_final_image_->SetData(m_image_data_);
+
+	if (m_settings_.accumulate)
+	{
+		m_frame_index_++;
+	}
+	else 
+	{
+		m_frame_index_ = 1;
+	}
 }
 
 renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
