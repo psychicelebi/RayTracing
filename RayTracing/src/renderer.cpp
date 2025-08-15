@@ -1,8 +1,7 @@
 #include "renderer.h"
 #include "Walnut/Random.h"
-#include "math.h"
-#include <iostream>
-#include <glm/gtx/string_cast.hpp>
+
+#include <execution>
 
 namespace utils
 {
@@ -39,6 +38,19 @@ void renderer::on_resize(uint32_t width, uint32_t height)
 
 	delete[] m_accumulation_data_;
 	m_accumulation_data_ = new glm::vec4[width * height];
+
+	m_ImageHorizontalIt.resize(width);
+	m_ImageVerticalIt.resize(height);
+
+	for (uint32_t i = 0; i < width; i++)
+	{
+		m_ImageHorizontalIt[i] = i;
+	}
+
+	for (uint32_t i = 0; i < height; i++)
+	{
+		m_ImageVerticalIt[i] = i;
+	}
 }
 
 void renderer::render(const scene& scene, const camera& camera)
@@ -53,6 +65,24 @@ void renderer::render(const scene& scene, const camera& camera)
 
 	// render every pixel
 
+#define MT 1
+#if MT
+	std::for_each(std::execution::par, m_ImageVerticalIt.begin(), m_ImageVerticalIt.end(), [this](uint32_t y) 
+		{
+			std::for_each(std::execution::par, m_ImageHorizontalIt.begin(), m_ImageHorizontalIt.end(), [this, y](uint32_t x)
+				{
+					glm::vec4 color = per_pixel(x, y);
+
+					m_accumulation_data_[y * m_final_image_->GetWidth() + x] += color;
+					glm::vec4 accumulated_colour = m_accumulation_data_[y * m_final_image_->GetWidth() + x];
+					accumulated_colour /= m_frame_index_;
+
+					accumulated_colour = clamp(accumulated_colour, glm::vec4(0.0f), glm::vec4(1.0f));
+					m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(accumulated_colour);
+
+				});
+		});
+#else
 	for (uint32_t y = 0; y < m_final_image_->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_final_image_->GetWidth(); x++)
@@ -67,6 +97,7 @@ void renderer::render(const scene& scene, const camera& camera)
 			m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(accumulated_colour);
 		}
 	}
+#endif
 
 
 	m_final_image_->SetData(m_image_data_);
