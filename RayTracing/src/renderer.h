@@ -29,6 +29,15 @@ public:
 	};
 	settings& get_settings() { return m_settings_; }
 
+	struct hit_info
+	{
+		float hit_distance;
+		glm::vec3 world_position;
+		glm::vec3 world_normal;
+
+		int object_index;
+	};
+
 private:
 	std::shared_ptr<Walnut::Image> m_final_image_;
 	uint32_t* m_image_data_ = nullptr;
@@ -41,15 +50,6 @@ private:
 
 	const scene* m_active_scene_ = nullptr;
 	const camera* m_active_camera_ = nullptr;
-
-	struct hit_info
-	{
-		float hit_distance;
-		glm::vec3 world_position;
-		glm::vec3 world_normal;
-
-		int object_index;
-	};
 
 	hit_info trace_ray(const ray& ray);
 	hit_info closest_hit(const ray& ray, int object_index, float hit_distance);

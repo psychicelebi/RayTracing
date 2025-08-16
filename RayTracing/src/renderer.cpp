@@ -143,6 +143,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	int ray_depth = 5;
 	glm::vec3 final_albedo = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 attenuation = { 1.0f, 1.0f, 1.0f };
+	glm::vec3 light_direction = normalize(m_active_scene_->light_direction);
 	
 	for (int i = 0; i <= ray_depth; i++)
 	{
@@ -153,7 +154,6 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			break;
 		}
 
-		glm::vec3 light_direction = normalize(m_active_scene_->light_position - hit_info.world_position);
 		float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
 
 		ray shadow_ray{ current_ray.origin, light_direction };

@@ -1,14 +1,8 @@
 #pragma once
+#include "material.h"
 
 #include <glm/glm.hpp>
 #include <vector>
-
-struct material 
-{
-	glm::vec3 albedo{ 1.0f };
-	float roughness = 0.0f;
-	float metallic = 0.0f;
-};
 
 struct sphere 
 {
@@ -20,6 +14,6 @@ struct sphere
 struct scene 
 {
 	std::vector<sphere> spheres;
-	glm::vec3 light_position{ 1.0f, 1.0f, 1.0f };
+	glm::vec3 light_direction{ -1.0f, -1.0f, -1.0f };
 	std::vector<material> materials;
 };

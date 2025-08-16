@@ -116,9 +116,9 @@ public:
 		ImGui::Text("Light Source Controls");
 		ImGui::BeginChild("Light Source Controls", ImVec2(0, 200), true);
 
-		ImGui::SliderFloat("x", &m_Scene.light_position.x, -10, 10);
-		ImGui::SliderFloat("y", &m_Scene.light_position.y, -10, 10);
-		ImGui::SliderFloat("z", &m_Scene.light_position.z, -10, 10);
+		ImGui::SliderFloat("x", &m_Scene.light_direction.x, -10, 10);
+		ImGui::SliderFloat("y", &m_Scene.light_direction.y, -10, 10);
+		ImGui::SliderFloat("z", &m_Scene.light_direction.z, -10, 10);
 
 		ImGui::EndChild();
 		ImGui::End();
