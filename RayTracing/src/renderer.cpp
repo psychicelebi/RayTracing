@@ -65,7 +65,7 @@ void renderer::render(const scene& scene, const camera& camera)
 
 	// render every pixel
 
-#define MT 1
+#define MT 1 // multi-threading
 #if MT
 	std::for_each(std::execution::par, m_ImageVerticalIt.begin(), m_ImageVerticalIt.end(), [this](uint32_t y) 
 		{
@@ -136,9 +136,9 @@ renderer::hit_info renderer::miss(const ray& ray)
 
 glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 {
-	ray ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()]) };
+	ray current_ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()]) };
 
-	hit_info hit_info = trace_ray(ray);
+	hit_info hit_info = trace_ray(current_ray);
 
 	int ray_depth = 5;
 	glm::vec3 final_albedo = { 0.0f, 0.0f, 0.0f };
@@ -156,17 +156,21 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 		glm::vec3 light_direction = normalize(m_active_scene_->light_position - hit_info.world_position);
 		float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
 
+		ray shadow_ray{ current_ray.origin, light_direction };
+
+		bool visible = trace_ray(shadow_ray).hit_distance < 0.0f ? true : false;
+
 		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
 		const material& material = m_active_scene_->materials[sphere.material_index];
 
-		final_albedo += attenuation * material.albedo * light_intensity;
+		final_albedo += visible ? attenuation * material.albedo * light_intensity : glm::vec3(0.0f, 0.0f, 0.0f);
 		attenuation *= material.albedo;
 		attenuation *= 0.7f;
 
-		ray.origin = hit_info.world_position + hit_info.world_normal * 0.001f;
-		ray.direction = reflect(ray.direction, hit_info.world_normal + material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f));
+		current_ray.origin = hit_info.world_position + hit_info.world_normal * 0.001f;
+		current_ray.direction = reflect(current_ray.direction, hit_info.world_normal + material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f));
 
-		hit_info = trace_ray(ray);
+		hit_info = trace_ray(current_ray);
 	}
 
 	return { final_albedo, 1.0f };
