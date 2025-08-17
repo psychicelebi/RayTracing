@@ -112,9 +112,9 @@ void renderer::render(const scene& scene, const camera& camera)
 	}
 }
 
-renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
+hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
 {
-	renderer::hit_info hit_info;
+	hit_info hit_info;
 	hit_info.hit_distance = hit_distance;
 	hit_info.object_index = object_index;
 
@@ -127,7 +127,7 @@ renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float
 	return hit_info;
 }
 
-renderer::hit_info renderer::miss(const ray& ray)
+hit_info renderer::miss(const ray& ray)
 {
 	hit_info hit_info;
 	hit_info.hit_distance = -1;
@@ -145,7 +145,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	glm::vec3 attenuation = { 1.0f, 1.0f, 1.0f };
 	glm::vec3 light_direction = normalize(m_active_scene_->light_direction);
 	
-	for (int i = 0; i <= ray_depth; i++)
+	for (int i = 0; i < ray_depth; i++)
 	{
 		if (hit_info.hit_distance < 0.0f)
 		{
@@ -154,21 +154,13 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			break;
 		}
 
-		float light_intensity = glm::max(dot(hit_info.world_normal, light_direction), 0.0f);
-
-		ray shadow_ray{ current_ray.origin, light_direction };
-
-		bool visible = trace_ray(shadow_ray).hit_distance < 0.0f ? true : false;
+		float light_intensity = glm::max(dot(hit_info.world_normal, -light_direction), 0.0f);
 
 		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
-		const material& material = m_active_scene_->materials[sphere.material_index];
+		material* material = m_active_scene_->materials[sphere.material_index].get();
 
-		final_albedo += visible ? attenuation * material.albedo * light_intensity : glm::vec3(0.0f, 0.0f, 0.0f);
-		attenuation *= material.albedo;
-		attenuation *= 0.7f;
-
-		current_ray.origin = hit_info.world_position + hit_info.world_normal * 0.001f;
-		current_ray.direction = reflect(current_ray.direction, hit_info.world_normal + material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f));
+		final_albedo += attenuation * material->albedo * light_intensity;
+		attenuation *= material->scatter(hit_info, current_ray) * 0.7f;
 
 		hit_info = trace_ray(current_ray);
 	}
@@ -176,7 +168,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	return { final_albedo, 1.0f };
 }
 
-renderer::hit_info renderer::trace_ray(const ray& ray)
+hit_info renderer::trace_ray(const ray& ray)
 {
 
 	// ray_direction = glm::normalize(ray_direction); // more expensive

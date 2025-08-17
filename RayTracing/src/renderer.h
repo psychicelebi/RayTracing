@@ -5,6 +5,8 @@
 #include "camera.h"
 #include "ray.h"
 #include "scene.h"
+#include "hit_info.h"
+#include "material.h"
 
 #include <memory>
 #include <glm/glm.hpp>
@@ -28,15 +30,6 @@ public:
 		bool accumulate = true;
 	};
 	settings& get_settings() { return m_settings_; }
-
-	struct hit_info
-	{
-		float hit_distance;
-		glm::vec3 world_position;
-		glm::vec3 world_normal;
-
-		int object_index;
-	};
 
 private:
 	std::shared_ptr<Walnut::Image> m_final_image_;

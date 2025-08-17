@@ -17,7 +17,7 @@ public:
 	ExampleLayer()
 		: m_Camera(60.0f, 0.1f, 100.0f) 
 	{
-		material& default_material = m_Scene.materials.emplace_back();
+		m_Scene.materials.emplace_back(std::make_unique<metal>());
 	}
 
 	virtual void OnUpdate(float ts)
@@ -60,12 +60,20 @@ public:
 			if (i == 0)
 				header_title = "Default Material";
 
+			material* material = m_Scene.materials[i].get();
+
 			if (ImGui::CollapsingHeader(header_title.c_str()))
 			{
-				material& material = m_Scene.materials[i];
-				ImGui::ColorEdit3("Albedo", glm::value_ptr(material.albedo));
-				ImGui::DragFloat("Roughness", &material.roughness, 0.05f, 0.0f, 1.0f);
-				ImGui::DragFloat("Metallic", &material.metallic, 0.05f, 0.0f, 1.0f);
+				ImGui::ColorEdit3("Albedo", glm::value_ptr(material->albedo));
+
+				if (metal* metal_material = dynamic_cast<metal*>(material))
+				{
+					ImGui::DragFloat("Roughness", &metal_material->roughness, 0.05f, 0.0f, 1.0f);
+				}
+				else if (diffuse* diffuse_material = dynamic_cast<diffuse*>(material))
+				{
+
+				}
 
 				ImGui::Separator();
 			}
@@ -73,10 +81,14 @@ public:
 			ImGui::PopID();
 		}
 
-		if (ImGui::Button("New Material"))
+		if (ImGui::Button("New Metal Material"))
 		{
-			material material;
-			m_Scene.materials.push_back(material);
+			m_Scene.materials.emplace_back(std::make_unique<metal>());
+		}
+
+		if (ImGui::Button("New Diffuse Material"))
+		{
+			m_Scene.materials.emplace_back(std::make_unique<diffuse>());
 		}
 
 		ImGui::EndChild();
