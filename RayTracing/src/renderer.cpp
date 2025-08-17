@@ -149,8 +149,16 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	{
 		if (hit_info.hit_distance < 0.0f)
 		{
-			glm::vec3 sky_color = { 0.6f, 0.7f, 0.9f };
-			final_albedo += attenuation * sky_color;
+			if (m_settings_.skybox)
+			{
+				float t = 0.5f * current_ray.direction.y + 1.0f;
+				final_albedo += attenuation * (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f);
+			}
+			else 
+			{
+				final_albedo += attenuation * m_active_scene_->background_colour;
+			}
+
 			break;
 		}
 

@@ -28,6 +28,7 @@ public:
 	struct settings
 	{
 		bool accumulate = true;
+		bool skybox = false;
 	};
 	settings& get_settings() { return m_settings_; }
 

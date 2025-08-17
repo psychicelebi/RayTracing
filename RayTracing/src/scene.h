@@ -16,4 +16,5 @@ struct scene
 	std::vector<sphere> spheres;
 	glm::vec3 light_direction{ -1.0f, -1.0f, -1.0f };
 	std::vector<std::unique_ptr<material>> materials;
+	glm::vec3 background_colour{ 0.6f, 0.7f, 0.9f };
 };
