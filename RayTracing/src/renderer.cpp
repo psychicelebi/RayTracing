@@ -160,7 +160,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 		material* material = m_active_scene_->materials[sphere.material_index].get();
 
 		final_albedo += attenuation * material->albedo * light_intensity;
-		attenuation *= material->scatter(hit_info, current_ray) * 0.7f;
+		attenuation *= material->scatter(hit_info, current_ray);
 
 		hit_info = trace_ray(current_ray);
 	}

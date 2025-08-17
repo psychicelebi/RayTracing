@@ -74,6 +74,10 @@ public:
 				{
 
 				}
+				else if (dielectric* dielectric_material = dynamic_cast<dielectric*>(material))
+				{
+					ImGui::DragFloat("Refractive Index", &dielectric_material->refractive_index, 0.05f, 1.0f, 3.0f);
+				}
 
 				ImGui::Separator();
 			}
@@ -81,14 +85,19 @@ public:
 			ImGui::PopID();
 		}
 
-		if (ImGui::Button("New Metal Material"))
+		if (ImGui::Button("New Material (Metal)"))
 		{
 			m_Scene.materials.emplace_back(std::make_unique<metal>());
 		}
 
-		if (ImGui::Button("New Diffuse Material"))
+		if (ImGui::Button("New Material (Diffuse)"))
 		{
 			m_Scene.materials.emplace_back(std::make_unique<diffuse>());
+		}
+
+		if (ImGui::Button("New Material (Dielectric)"))
+		{
+			m_Scene.materials.emplace_back(std::make_unique<dielectric>());
 		}
 
 		ImGui::EndChild();

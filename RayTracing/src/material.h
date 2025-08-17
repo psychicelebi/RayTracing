@@ -32,6 +32,17 @@ public:
 		current_ray.origin = hit_info.world_position + hit_info.world_normal * 0.001f;
 		current_ray.direction = reflect(current_ray.direction, hit_info.world_normal + roughness * Walnut::Random::Vec3(-0.5f, 0.5f));
 
+		return albedo * 0.8f;
+	}
+};
+
+class dielectric : public material
+{
+public:
+	float refractive_index = 1.0f;
+
+	glm::vec3 scatter(hit_info& hit_info, ray& current_ray) const
+	{
 		return albedo;
 	}
 };
