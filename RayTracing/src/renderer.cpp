@@ -112,7 +112,7 @@ void renderer::render(const scene& scene, const camera& camera)
 	}
 }
 
-hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
+renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
 {
 	hit_info hit_info;
 	hit_info.hit_distance = hit_distance;
@@ -127,7 +127,7 @@ hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_dista
 	return hit_info;
 }
 
-hit_info renderer::miss(const ray& ray)
+renderer::hit_info renderer::miss(const ray& ray)
 {
 	hit_info hit_info;
 	hit_info.hit_distance = -1;
@@ -143,7 +143,6 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	int ray_depth = 5;
 	glm::vec3 final_albedo = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 attenuation = { 1.0f, 1.0f, 1.0f };
-	glm::vec3 light_direction = normalize(m_active_scene_->light_direction);
 	
 	for (int i = 0; i < ray_depth; i++)
 	{
@@ -162,13 +161,13 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			break;
 		}
 
-		float light_intensity = glm::max(dot(hit_info.world_normal, -light_direction), 0.0f);
+		float light_intensity = glm::max(dot(hit_info.world_normal, m_active_scene_->light->get_direction(hit_info.world_position)), 0.0f);
 
 		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
 		material* material = m_active_scene_->materials[sphere.material_index].get();
 
 		final_albedo += attenuation * material->albedo * light_intensity;
-		attenuation *= material->scatter(hit_info, current_ray);
+		attenuation *= material->scatter(hit_info.world_position, hit_info.world_normal, current_ray);
 
 		hit_info = trace_ray(current_ray);
 	}
@@ -176,7 +175,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	return { final_albedo, 1.0f };
 }
 
-hit_info renderer::trace_ray(const ray& ray)
+renderer::hit_info renderer::trace_ray(const ray& ray)
 {
 
 	// ray_direction = glm::normalize(ray_direction); // more expensive

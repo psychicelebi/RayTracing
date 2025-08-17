@@ -18,6 +18,7 @@ public:
 		: m_Camera(60.0f, 0.1f, 100.0f) 
 	{
 		m_Scene.materials.emplace_back(std::make_unique<metal>());
+		m_Scene.light = std::make_unique<distant_light>();
 	}
 
 	virtual void OnUpdate(float ts)
@@ -67,15 +68,15 @@ public:
 					{
 						ImGui::ColorEdit3("Albedo", glm::value_ptr(material->albedo));
 
-						if (metal* metal_material = dynamic_cast<metal*>(material))
+						if (auto* metal_material = dynamic_cast<metal*>(material))
 						{
 							ImGui::DragFloat("Roughness", &metal_material->roughness, 0.05f, 0.0f, 1.0f);
 						}
-						else if (diffuse* diffuse_material = dynamic_cast<diffuse*>(material))
+						else if (auto* diffuse_material = dynamic_cast<diffuse*>(material))
 						{
 
 						}
-						else if (dielectric* dielectric_material = dynamic_cast<dielectric*>(material))
+						else if (auto* dielectric_material = dynamic_cast<dielectric*>(material))
 						{
 							ImGui::DragFloat("Refractive Index", &dielectric_material->refractive_index, 0.05f, 1.0f, 3.0f);
 						}
@@ -150,9 +151,9 @@ public:
 			ImGui::Text("Light Source Controls");
 			ImGui::BeginChild("Light Source Controls", ImVec2(0, 200), true);
 			{
-				ImGui::SliderFloat("x", &m_Scene.light_direction.x, -10, 10);
-				ImGui::SliderFloat("y", &m_Scene.light_direction.y, -10, 10);
-				ImGui::SliderFloat("z", &m_Scene.light_direction.z, -10, 10);
+				ImGui::SliderFloat("x", &m_Scene.light->get_vector().x, -10, 10);
+				ImGui::SliderFloat("y", &m_Scene.light->get_vector().y, -10, 10);
+				ImGui::SliderFloat("z", &m_Scene.light->get_vector().z, -10, 10);
 			}
 
 			ImGui::EndChild();
