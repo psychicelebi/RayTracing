@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <Walnut/Random.h>
 #include "ray.h"
+#include "hit_info.h"
 
 
 class material
@@ -11,15 +12,15 @@ public:
 
 	virtual ~material() {}
 
-	virtual glm::vec3 scatter(const glm::vec3& world_position, const glm::vec3& world_normal, ray& current_ray) const = 0;
+	virtual bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const = 0;
 };
 
 class diffuse : public material
 {
 public:
-	glm::vec3 scatter(const glm::vec3& world_position, const glm::vec3& world_normal, ray& current_ray) const
+	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override
 	{
-		return albedo;
+		return true;
 	}
 };
 
@@ -28,12 +29,14 @@ class metal : public material
 public:
 	float roughness = 0.0f;
 
-	glm::vec3 scatter(const glm::vec3& world_position, const glm::vec3& world_normal, ray& current_ray) const override
+	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override
 	{
-		current_ray.origin = world_position + world_normal * 0.001f;
-		current_ray.direction = reflect(current_ray.direction, world_normal + roughness * Walnut::Random::Vec3(-0.5f, 0.5f));
+		glm::vec3 reflection = reflect(current_ray.direction, hit_info.world_normal);
+		scattered_ray.origin = hit_info.world_position + 0.001f * hit_info.world_normal;
+		scattered_ray.direction = normalize(reflection + roughness * Walnut::Random::Vec3(-5.0f, 5.0f));
 
-		return albedo * 0.8f;
+		attenuation = albedo;
+		return true;
 	}
 };
 
@@ -42,8 +45,8 @@ class dielectric : public material
 public:
 	float refractive_index = 1.0f;
 
-	glm::vec3 scatter(const glm::vec3& world_position, const glm::vec3& world_normal, ray& current_ray) const
+	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override
 	{
-		return albedo;
+		return true;
 	}
 };

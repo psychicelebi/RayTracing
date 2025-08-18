@@ -1,14 +1,17 @@
 #pragma once
+#include <numbers>
 #include <glm/glm.hpp>
 
 class light 
 {
 public:
 	glm::vec3 colour{ 1.0f };
-	glm::vec3 intensity{ 1.0f };
+	float intensity{ 1.0f };
 
 	virtual glm::vec3 get_direction(const glm::vec3& world_position) const = 0;
-	
+
+	virtual glm::vec3 get_intensity(const glm::vec3& world_position) const = 0;
+
 	virtual glm::vec3& get_vector() = 0;
 
 	virtual ~light() {}
@@ -22,7 +25,13 @@ public:
 	glm::vec3 get_direction(const glm::vec3& world_position) const override
 	{
 		return glm::normalize(position - world_position);
-	};
+	}
+
+	glm::vec3 get_intensity(const glm::vec3& world_position) const
+	{
+		constexpr float PI = 3.14159265358979323846f;
+		return colour * intensity / (4.0f * PI * glm::length(get_direction(position - world_position)));
+	}
 
 	glm::vec3& get_vector() override { return position; }
 };
@@ -35,7 +44,13 @@ public:
 	glm::vec3 get_direction(const glm::vec3& world_position) const override
 	{
 		return -direction;
-	};
+	}
+
+	glm::vec3 get_intensity(const glm::vec3& world_position) const
+	{
+		return colour * intensity;
+	}
+
 
 	glm::vec3& get_vector() override { return direction; }
 };

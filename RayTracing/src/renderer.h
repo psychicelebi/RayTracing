@@ -6,6 +6,7 @@
 #include "ray.h"
 #include "scene.h"
 #include "material.h"
+#include "hit_info.h"
 
 #include <memory>
 #include <glm/glm.hpp>
@@ -43,15 +44,6 @@ private:
 
 	const scene* m_active_scene_ = nullptr;
 	const camera* m_active_camera_ = nullptr;
-
-	struct hit_info
-	{
-		float hit_distance;
-		glm::vec3 world_position;
-		glm::vec3 world_normal;
-
-		int object_index;
-	};
 
 	hit_info trace_ray(const ray& ray);
 	hit_info closest_hit(const ray& ray, int object_index, float hit_distance);

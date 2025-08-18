@@ -112,7 +112,7 @@ void renderer::render(const scene& scene, const camera& camera)
 	}
 }
 
-renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
+hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
 {
 	hit_info hit_info;
 	hit_info.hit_distance = hit_distance;
@@ -127,7 +127,7 @@ renderer::hit_info renderer::closest_hit(const ray& ray, int object_index, float
 	return hit_info;
 }
 
-renderer::hit_info renderer::miss(const ray& ray)
+hit_info renderer::miss(const ray& ray)
 {
 	hit_info hit_info;
 	hit_info.hit_distance = -1;
@@ -138,22 +138,22 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 {
 	ray current_ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()]) };
 
-	hit_info hit_info = trace_ray(current_ray);
-
 	int ray_depth = 5;
-	glm::vec3 final_albedo = { 0.0f, 0.0f, 0.0f };
-	glm::vec3 attenuation = { 1.0f, 1.0f, 1.0f };
-	
+	glm::vec3 final_albedo{ 0.0f };
+	glm::vec3 attenuation{ 1.0f };
+
 	for (int i = 0; i < ray_depth; i++)
 	{
+		hit_info hit_info = trace_ray(current_ray);
+
 		if (hit_info.hit_distance < 0.0f)
 		{
 			if (m_settings_.skybox)
 			{
 				float t = 0.5f * current_ray.direction.y + 1.0f;
-				final_albedo += attenuation * (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f);
+				final_albedo += attenuation * ((1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f));
 			}
-			else 
+			else
 			{
 				final_albedo += attenuation * m_active_scene_->background_colour;
 			}
@@ -161,21 +161,27 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			break;
 		}
 
-		float light_intensity = glm::max(dot(hit_info.world_normal, m_active_scene_->light->get_direction(hit_info.world_position)), 0.0f);
+		glm::vec3 local_attenuation{ 1.0f };
+		ray scattered_ray;
 
 		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
 		material* material = m_active_scene_->materials[sphere.material_index].get();
 
-		final_albedo += attenuation * material->albedo * light_intensity;
-		attenuation *= material->scatter(hit_info.world_position, hit_info.world_normal, current_ray);
-
-		hit_info = trace_ray(current_ray);
+		if (material->scatter(current_ray, scattered_ray, hit_info, local_attenuation))
+		{
+			attenuation *= local_attenuation;
+			current_ray = scattered_ray;
+		}
+		else 
+		{
+			break;
+		}
 	}
 
 	return { final_albedo, 1.0f };
 }
 
-renderer::hit_info renderer::trace_ray(const ray& ray)
+hit_info renderer::trace_ray(const ray& ray)
 {
 
 	// ray_direction = glm::normalize(ray_direction); // more expensive
