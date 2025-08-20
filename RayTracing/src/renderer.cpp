@@ -1,7 +1,4 @@
 #include "renderer.h"
-#include "Walnut/Random.h"
-
-#include <execution>
 
 namespace utils
 {
@@ -151,7 +148,8 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			if (m_settings_.skybox)
 			{
 				float t = 0.5f * current_ray.direction.y + 1.0f;
-				final_albedo += attenuation * ((1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f));
+				glm::vec3 sky_colour = (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f);
+				final_albedo += attenuation * sky_colour;
 			}
 			else
 			{
@@ -166,6 +164,21 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 
 		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
 		material* material = m_active_scene_->materials[sphere.material_index].get();
+
+		if (dynamic_cast<diffuse*>(material))
+		{
+			light* light = m_active_scene_->light.get();
+			glm::vec3 light_direction = light->get_direction(hit_info.world_position);
+
+			ray shadow_ray{ hit_info.world_position + 0.001f * hit_info.world_normal, light_direction };
+
+			if (trace_ray(shadow_ray).hit_distance < 0.0f)
+			{
+				final_albedo += material->albedo / glm::pi<float>()
+					* light->get_intensity(hit_info.world_position)
+					* std::max(0.0f, dot(hit_info.world_normal, light_direction));
+			}
+		}
 
 		if (material->scatter(current_ray, scattered_ray, hit_info, local_attenuation))
 		{
