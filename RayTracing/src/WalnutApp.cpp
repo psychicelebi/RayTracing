@@ -8,6 +8,7 @@
 #include "camera.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <limits>
 
 using namespace Walnut;
 
@@ -18,7 +19,7 @@ public:
 		: m_Camera(60.0f, 0.1f, 100.0f) 
 	{
 		m_Scene.materials.emplace_back(std::make_unique<metal>());
-		m_Scene.light = std::make_unique<distant_light>();
+		m_Scene.lights.emplace_back(std::make_unique<distant_light>());
 	}
 
 	virtual void OnUpdate(float ts)
@@ -71,10 +72,6 @@ public:
 						if (auto* metal_material = dynamic_cast<metal*>(material))
 						{
 							ImGui::DragFloat("Roughness", &metal_material->roughness, 0.05f, 0.0f, 1.0f);
-						}
-						else if (auto* diffuse_material = dynamic_cast<diffuse*>(material))
-						{
-
 						}
 						else if (auto* dielectric_material = dynamic_cast<dielectric*>(material))
 						{
@@ -151,9 +148,52 @@ public:
 			ImGui::Text("Light Source Controls");
 			ImGui::BeginChild("Light Source Controls", ImVec2(0, 200), true);
 			{
-				ImGui::SliderFloat("x", &m_Scene.light->get_vector().x, -10, 10);
-				ImGui::SliderFloat("y", &m_Scene.light->get_vector().y, -10, 10);
-				ImGui::SliderFloat("z", &m_Scene.light->get_vector().z, -10, 10);
+				for (size_t i = 0; i < m_Scene.lights.size(); i++)
+				{
+
+					ImGui::PushID(i);
+
+					std::string header_title = "Light #" + std::to_string(i);
+					if (i == 0)
+						header_title = "Default Light";
+
+					if (ImGui::CollapsingHeader(header_title.c_str()))
+					{
+						light* light = m_Scene.lights[i].get();
+
+						ImGui::ColorEdit3("Albedo", glm::value_ptr(light->colour));
+						ImGui::SliderFloat("Intensity", &light->intensity, 0.0f, 100.0f);
+
+						ImGui::SliderFloat("x", &light->get_vector().x, -10, 10);
+						ImGui::SliderFloat("y", &light->get_vector().y, -10, 10);
+						ImGui::SliderFloat("z", &light->get_vector().z, -10, 10);
+
+						ImGui::Separator();
+					}
+
+					ImGui::PopID();
+
+				}
+
+				if (ImGui::Button("New Light"))
+					ImGui::OpenPopup("Select Light");
+
+				if (ImGui::BeginPopup("Select Light"))
+				{
+					if (ImGui::Button("Spherical"))
+					{
+						m_Scene.lights.emplace_back(std::make_unique<spherical_light>());
+						ImGui::CloseCurrentPopup();
+					}
+
+					if (ImGui::Button("Distant"))
+					{
+						m_Scene.lights.emplace_back(std::make_unique<distant_light>());
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::EndPopup();
+				}
 			}
 
 			ImGui::EndChild();
@@ -178,7 +218,6 @@ public:
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Viewport");
 		{
-
 			m_ViewportWidth = ImGui::GetContentRegionAvail().x;
 			m_ViewportHeight = ImGui::GetContentRegionAvail().y;
 

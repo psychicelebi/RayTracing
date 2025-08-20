@@ -167,16 +167,19 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 
 		if (dynamic_cast<diffuse*>(material))
 		{
-			light* light = m_active_scene_->light.get();
-			glm::vec3 light_direction = light->get_direction(hit_info.world_position);
-
-			ray shadow_ray{ hit_info.world_position + 0.001f * hit_info.world_normal, light_direction };
-
-			if (trace_ray(shadow_ray).hit_distance < 0.0f)
+			for (int i = 0; i < m_active_scene_->lights.size(); i++)
 			{
-				final_albedo += material->albedo / glm::pi<float>()
-					* light->get_intensity(hit_info.world_position)
-					* std::max(0.0f, dot(hit_info.world_normal, light_direction));
+				light* light = m_active_scene_->lights[i].get();
+				glm::vec3 light_direction = light->get_direction(hit_info.world_position);
+
+				ray shadow_ray{ hit_info.world_position + 0.001f * hit_info.world_normal, light_direction };
+
+				if (trace_ray(shadow_ray).hit_distance < 0.0f)
+				{
+					final_albedo += material->albedo / glm::pi<float>()
+						* light->get_intensity(hit_info.world_position)
+						* std::max(0.0f, dot(hit_info.world_normal, light_direction));
+				}
 			}
 		}
 
@@ -209,13 +212,6 @@ hit_info renderer::trace_ray(const ray& ray)
 
 	for (size_t i = 0; i < m_active_scene_->spheres.size(); i++)
 	{
-		// (B.B)t^2 + 2(B.(A-C))t + ((A-C).(A-C) - r^2) = 0
-		// A = ray origin vector (camera)
-		// B = ray direction vector
-		// t = parameter
-		// C = centre of sphere
-		// r = radius
-
 		const sphere& sphere = m_active_scene_->spheres[i];
 		float a = dot(ray.direction, ray.direction);
 		float b = 2.0f * dot(ray.direction, ray.origin - sphere.centre);
