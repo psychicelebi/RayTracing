@@ -21,3 +21,13 @@ This is a CPU-based Ray Tracer built as a learning project initially following [
 - Spotlights for directed illumination.
 - Additional geometry support (e.g., planes).
 - Texture mapping and normal mapping for more detailed surfaces.
+
+## Screenshots
+
+![Diffuse object](screenshots/diffuse.png)
+![Diffuse object 2](screenshots/diffuse-1.png)
+![Diffuse object 3](screenshots/diffuse-2.png)
+![Multiple Lights](screenshots/multiple%20lights.png)
+![Reflection](screenshots/reflection.png)
+![Shadows](screenshots/shadows.png)
+![Spherical Light](screenshots/spherical%20light.png)
