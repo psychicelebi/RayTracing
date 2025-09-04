@@ -24,10 +24,19 @@ This is a CPU-based Ray Tracer built as a learning project initially following [
 
 ## Screenshots
 
+### Basic diffuse objects
 ![Diffuse object](screenshots/diffuse.png)
 ![Diffuse object 2](screenshots/diffuse-1.png)
 ![Diffuse object 3](screenshots/diffuse-2.png)
+
+### Multiple light sources
 ![Multiple Lights](screenshots/multiple%20lights.png)
+
+### Reflective objects/Metal materials
 ![Reflection](screenshots/reflection.png)
+
+### Shadows
 ![Shadows](screenshots/shadows.png)
+
+### Spherical light source
 ![Spherical Light](screenshots/spherical%20light.png)
