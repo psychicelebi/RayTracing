@@ -13,6 +13,7 @@ namespace utils
 		return result;
 	}
 }
+
 void renderer::on_resize(uint32_t width, uint32_t height)
 {
 	if (m_final_image_)
@@ -69,6 +70,7 @@ void renderer::render(const scene& scene, const camera& camera)
 			std::for_each(std::execution::par, m_ImageHorizontalIt.begin(), m_ImageHorizontalIt.end(), [this, y](uint32_t x)
 				{
 					glm::vec4 color = per_pixel(x, y);
+					num_primary_rays++;
 
 					m_accumulation_data_[y * m_final_image_->GetWidth() + x] += color;
 					glm::vec4 accumulated_colour = m_accumulation_data_[y * m_final_image_->GetWidth() + x];
@@ -142,6 +144,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	for (int i = 0; i < ray_depth; i++)
 	{
 		hit_info hit_info = trace_ray(current_ray);
+		num_ray_sphere_tests++;
 
 		if (hit_info.hit_distance < 0.0f)
 		{
@@ -158,6 +161,8 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 
 			break;
 		}
+
+		num_ray_sphere_isect++;
 
 		glm::vec3 local_attenuation{ 1.0f };
 		ray scattered_ray;

@@ -13,6 +13,7 @@
 #include <execution>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <atomic>
 
 class renderer
 {
@@ -34,6 +35,10 @@ public:
 		bool skybox = false;
 	};
 	settings& get_settings() { return m_settings_; }
+
+	inline static std::atomic<uint64_t> num_ray_sphere_tests{ 0 };
+	inline static std::atomic<uint64_t> num_ray_sphere_isect{ 0 };
+	inline static std::atomic<uint64_t> num_primary_rays{ 0 };
 
 private:
 	std::shared_ptr<Walnut::Image> m_final_image_;

@@ -18,8 +18,8 @@ public:
 	ExampleLayer()
 		: m_Camera(60.0f, 0.1f, 100.0f) 
 	{
-		m_Scene.materials.emplace_back(std::make_unique<metal>());
-		m_Scene.lights.emplace_back(std::make_unique<distant_light>());
+		m_Scene.materials.emplace_back(std::make_unique<diffuse>());
+		m_Scene.lights.emplace_back(std::make_unique<spherical_light>());
 	}
 
 	virtual void OnUpdate(float ts)
@@ -34,6 +34,9 @@ public:
 		{
 			ImGui::Text("Last render: %.3fms", m_LastRenderTime);
 			ImGui::Text("FPS: %.1f", 1000.0f / m_LastRenderTime);
+			//ImGui::Text("Total no. of primary rays: %lu", m_Renderer.num_primary_rays.load());
+			//ImGui::Text("Total no. of ray-sphere tests: %lu", m_Renderer.num_ray_sphere_tests.load());
+			//ImGui::Text("Total no. of ray-sphere intersections: %lu", m_Renderer.num_ray_sphere_isect.load());
 
 			if (ImGui::Button("Render"))
 			{
@@ -205,7 +208,7 @@ public:
 			{
 				ImGui::Checkbox("Enable Skybox", &m_Renderer.get_settings().skybox);
 
-				ImGui::BeginDisabled(&m_Renderer.get_settings().skybox);
+				ImGui::BeginDisabled(m_Renderer.get_settings().skybox);
 				{
 					ImGui::ColorEdit3("Background Colour", glm::value_ptr(m_Scene.background_colour));
 				}
