@@ -18,9 +18,6 @@ This is a CPU-based Ray Tracer built as a learning project initially following [
 - Anti-aliasing via supersampling.
 - Basic acceleration structure (BVH) for faster rendering.
 - Area lights for more realistic lighting.
-- Spotlights for directed illumination.
-- Additional geometry support (e.g., planes).
-- Texture mapping and normal mapping for more detailed surfaces.
 
 ## Screenshots
 
