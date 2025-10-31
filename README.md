@@ -7,7 +7,7 @@ This is a CPU-based Ray Tracer built as a learning project initially following [
 - Lighting: Implements distant and spherical lights and support for multiple light sources.
 - Shadows: Casts shadows from objects.
 - Reflections: Recursive ray tracing for reflective surfaces.
-- Global Illumination: Monte Carlo sample accumulation for realistic indirect lighting.
+- Path Tracing: Monte Carlo sample accumulation for realistic indirect lighting.
 - Camera Controls: Move and rotate the camera to explore the scene interactively.
 - Interactive UI: Adjust scene parameters (e.g. materials, lighting etc) in real time.
 - Multi-threading: Uses multiple CPU cores for faster rendering.
