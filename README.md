@@ -11,10 +11,10 @@ This is a CPU-based Ray Tracer built as a learning project initially following [
 - Camera Controls: Move and rotate the camera to explore the scene interactively.
 - Interactive UI: Adjust scene parameters (e.g. materials, lighting etc) in real time.
 - Multi-threading: Uses multiple CPU cores for faster rendering.
+- Refraction: Simulates transparent materials with Fresnel-based light bending.
 
 ## Planned Features
 
-- Refractions / dielectric materials.
 - Anti-aliasing via supersampling.
 - Basic acceleration structure (BVH) for faster rendering.
 - Area lights for more realistic lighting.
