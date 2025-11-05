@@ -21,7 +21,7 @@ class diffuse : public material
 public:
 	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override
 	{
-		scattered_ray.origin = hit_info.world_position + 0.001f * hit_info.world_normal;
+		scattered_ray.origin = hit_info.world_position;
 		scattered_ray.direction = hit_info.world_normal + diffuse_reflect(hit_info.world_normal);
 
 		attenuation = albedo;
@@ -52,7 +52,7 @@ public:
 	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override
 	{
 		glm::vec3 reflection = reflect(current_ray.direction, hit_info.world_normal);
-		scattered_ray.origin = hit_info.world_position + 0.001f * hit_info.world_normal;
+		scattered_ray.origin = hit_info.world_position;
 		scattered_ray.direction = normalize(reflection + roughness * Walnut::Random::Vec3(-1.0f, 1.0f));
 
 		attenuation = albedo;
@@ -99,8 +99,7 @@ public:
 			scattered_ray.direction = refracted_perp + refracted_parallel;
 		}
 
-		float offset_dir = (glm::dot(scattered_ray.direction, normal) > 0.0f) ? 1.0f : -1.0f;
-		scattered_ray.origin = hit_info.world_position + 0.001f * offset_dir * normal;
+		scattered_ray.origin = hit_info.world_position;
 		attenuation = albedo;
 		return true;
 	}

@@ -177,7 +177,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 				light* light = m_active_scene_->lights[i].get();
 				glm::vec3 light_direction = light->get_direction(hit_info.world_position);
 
-				ray shadow_ray{ hit_info.world_position + 0.001f * hit_info.world_normal, light_direction };
+				ray shadow_ray{ hit_info.world_position, light_direction };
 
 				if (trace_ray(shadow_ray).hit_distance < 0.0f)
 				{
@@ -227,8 +227,9 @@ hit_info renderer::trace_ray(const ray& ray)
 			float q = (b > 0) ? -0.5f * (b + sqrt(discriminant)) : -0.5f * (b - sqrt(discriminant)); // ensures calculation is numerically stable
 
 			float t = std::min(q / a, c / q); // t is the entry point
+			const float T_Min = 0.001f; // to avoid self-intersection
 
-			if (t > 0 && t < hit_distance)
+			if (t > T_Min && t < hit_distance)
 			{
 				hit_distance = t;
 				closest_sphere = (int)i;
