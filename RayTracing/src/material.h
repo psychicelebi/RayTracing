@@ -31,13 +31,7 @@ public:
 private:
 	glm::vec3 diffuse_reflect(const glm::vec3& normal) const 
 	{
-		glm::vec3 vector{ 0.0f };
-		do
-		{
-			vector = Walnut::Random::Vec3(-1.0f, 1.0f);
-		} while (glm::length(vector) > 1.0f);
-
-		vector = normalize(vector);
+		glm::vec3 vector = Walnut::Random::InUnitSphere();
 
 		if (glm::dot(vector, normal) > 0.0f)
 		{
