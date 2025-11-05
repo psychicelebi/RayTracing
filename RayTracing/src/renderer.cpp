@@ -135,7 +135,7 @@ hit_info renderer::miss(const ray& ray)
 
 glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 {
-	ray current_ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction()[x + y * m_final_image_->GetWidth()]) };
+	ray current_ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction(x, y))};
 
 	int ray_depth = 5;
 	glm::vec3 final_albedo{ 0.0f };

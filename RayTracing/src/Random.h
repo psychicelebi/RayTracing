@@ -70,6 +70,7 @@ namespace Random
 		return get<R>(static_cast<R>(min), static_cast<R>(max));
 	}
 
+	// Generate a random value between [min, max)
 	template <typename T>
 	T getReal(T min, T max)
 	{

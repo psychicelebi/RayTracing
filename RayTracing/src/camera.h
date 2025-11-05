@@ -18,14 +18,13 @@ public:
 	
 	const glm::vec3& get_position() const { return m_Position; }
 	const glm::vec3& get_direction() const { return m_ForwardDirection; }
-
-	const std::vector<glm::vec3>& get_ray_direction() const { return m_RayDirections; }
+	glm::vec3 get_ray_direction(uint32_t x, uint32_t y) const;
 
 	float get_rotation_speed();
 private:
 	void recalculate_projection();
 	void recalculate_view();
-	void recalculate_ray_directions();
+	// void recalculate_ray_directions();
 private:
 	glm::mat4 m_Projection{ 1.0f };
 	glm::mat4 m_View{ 1.0f };
@@ -40,7 +39,7 @@ private:
 	glm::vec3 m_ForwardDirection{0.0f, 0.0f, 0.0f};
 
 	// Cached ray directions
-	std::vector<glm::vec3> m_RayDirections;
+	// std::vector<glm::vec3> m_RayDirections;
 
 	glm::vec2 m_LastMousePosition{ 0.0f, 0.0f };
 

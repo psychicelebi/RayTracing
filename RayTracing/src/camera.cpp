@@ -6,6 +6,8 @@
 
 #include "Walnut/Input/Input.h"
 
+#include "Random.h"
+
 using namespace Walnut;
 
 camera::camera(float verticalFOV, float nearClip, float farClip)
@@ -85,7 +87,6 @@ bool camera::on_update(float ts)
 	if (moved)
 	{
 		recalculate_view();
-		recalculate_ray_directions();
 	}
 
 	return moved;
@@ -100,7 +101,6 @@ void camera::on_resize(uint32_t width, uint32_t height)
 	m_ViewportHeight = height;
 
 	recalculate_projection();
-	recalculate_ray_directions();
 }
 
 float camera::get_rotation_speed()
@@ -119,6 +119,23 @@ void camera::recalculate_view()
 	m_View = glm::lookAt(m_Position, m_Position + m_ForwardDirection, glm::vec3(0, 1, 0));
 	m_InverseView = glm::inverse(m_View);
 }
+
+glm::vec3 camera::get_ray_direction(uint32_t x, uint32_t y) const
+{
+	glm::vec2 jitter = { Random::getReal(0.0f, 1.0f) , Random::getReal(0.0f, 1.0f) };
+
+	// map to NDC space [0,1]
+	glm::vec2 coord = { (x + jitter.x) / m_ViewportWidth, (y + jitter.y) / m_ViewportHeight };
+
+	// map to screen space [-1,1]
+	coord.x = coord.x * 2.0f - 1.0f;
+	coord.y = 1.0f - coord.y * 2.0f;
+
+	glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, -1, 1);
+	return glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space
+}
+
+/*
 
 void camera::recalculate_ray_directions()
 {
@@ -141,3 +158,4 @@ void camera::recalculate_ray_directions()
 		}
 	}
 }
+*/

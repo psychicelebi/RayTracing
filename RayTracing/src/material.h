@@ -92,8 +92,6 @@ public:
 		float eta = n1 / n2;
 		float reflectance = calculate_reflectance(std::fabs(cos_i), n1, n2);
 
-		// std::cout << "reflectance: " << reflectance << std::endl;
-
 		if (eta * sin_i > 1.0f || reflectance >= Random::getReal<float>(0.0f, 1.0f))
 		{
 			glm::vec3 reflection = reflect(current_ray.direction, normal);
