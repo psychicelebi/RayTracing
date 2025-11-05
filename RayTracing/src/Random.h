@@ -52,7 +52,7 @@ namespace Random
 	// Sample call: Random::get(1L, 6L);             // returns long
 	// Sample call: Random::get(1u, 6u);             // returns unsigned int
 	template <typename T>
-	T get(T min, T max)
+	T getInt(T min, T max)
 	{
 		return std::uniform_int_distribution<T>{min, max}(mt);
 	}
@@ -65,9 +65,16 @@ namespace Random
 	// Sample call: Random::get<std::size_t>(0, 6u); // returns std::size_t
 	// Sample call: Random::get<std::int>(0, 6u);    // returns int
 	template <typename R, typename S, typename T>
-	R get(S min, T max)
+	R getInt(S min, T max)
 	{
 		return get<R>(static_cast<R>(min), static_cast<R>(max));
+	}
+
+	template <typename T>
+	T getReal(T min, T max)
+	{
+		return std::uniform_real_distribution<T>{min, max}(mt);
+
 	}
 }
 
