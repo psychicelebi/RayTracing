@@ -3,7 +3,7 @@
 #include <Walnut/Random.h>
 #include "ray.h"
 #include "hit_info.h"
-#include <random>
+#include "Random.h"
 
 
 class material
@@ -94,7 +94,7 @@ public:
 
 		// std::cout << "reflectance: " << reflectance << std::endl;
 
-		if (eta * sin_i > 1.0f || reflectance >= probability(rng))
+		if (eta * sin_i > 1.0f || reflectance >= Random::get<float>(0.0f, 1.0f))
 		{
 			glm::vec3 reflection = reflect(current_ray.direction, normal);
 			scattered_ray.direction = normalize(reflection);
