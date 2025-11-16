@@ -12,10 +12,10 @@ This is a software Path Tracer built as a learning project initially following [
 - Interactive UI: Adjust scene parameters (e.g. materials, lighting etc) in real time.
 - Multi-threading: Uses multiple CPU cores for faster rendering.
 - Refraction: Simulates transparent materials with Fresnel-based light bending.
+- Anti-aliasing: Uses jittered sub-pixel sampling to smooth edges and reduce aliasing.
 
 ## Planned Features
 
-- Anti-aliasing via supersampling.
 - Basic acceleration structure (BVH) for faster rendering.
 - Area lights for more realistic lighting.
 
