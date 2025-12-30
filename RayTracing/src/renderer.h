@@ -36,10 +36,6 @@ public:
 	};
 	settings& get_settings() { return m_settings_; }
 
-	inline static std::atomic<uint64_t> num_ray_sphere_tests{ 0 };
-	inline static std::atomic<uint64_t> num_ray_sphere_isect{ 0 };
-	inline static std::atomic<uint64_t> num_primary_rays{ 0 };
-
 private:
 	std::shared_ptr<Walnut::Image> m_final_image_;
 	uint32_t* m_image_data_ = nullptr;

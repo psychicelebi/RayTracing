@@ -119,7 +119,7 @@ public:
 			ImGui::Text("Spheres");
 			ImGui::BeginChild("Spheres", ImVec2(0, 200), true);
 			{
-				for (size_t i = 0; i < m_Scene.spheres.size(); i++)
+				for (size_t i = 0; i < m_Scene.objects.size(); i++)
 				{
 					ImGui::PushID(i);
 
@@ -127,10 +127,14 @@ public:
 
 					if (ImGui::CollapsingHeader(header_title.c_str()))
 					{
-						sphere& sphere = m_Scene.spheres[i];
-						ImGui::DragFloat3("Centre", glm::value_ptr(sphere.centre), 0.05f);
-						ImGui::DragFloat("Radius", &sphere.radius, 0.05f);
-						ImGui::DragInt("Material", &sphere.material_index, 1.0f, 0, (int)m_Scene.materials.size() - 1);
+						object* object = m_Scene.objects[i].get();
+						ImGui::DragFloat3("Position", glm::value_ptr(object->position), 0.05f);
+						ImGui::DragInt("Material", &object->material_index, 1.0f, 0, (int)m_Scene.materials.size() - 1);
+
+						if (auto* sphere_object = dynamic_cast<sphere*>(object))
+						{
+							ImGui::DragFloat("Radius", &sphere_object->radius, 0.05f);
+						}
 
 						ImGui::Separator();
 					}
@@ -140,8 +144,7 @@ public:
 
 				if (ImGui::Button("New Sphere"))
 				{
-					sphere sphere;
-					m_Scene.spheres.push_back(sphere);
+					m_Scene.objects.emplace_back(std::make_unique<sphere>());
 				}
 			}
 

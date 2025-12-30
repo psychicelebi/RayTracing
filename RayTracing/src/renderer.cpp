@@ -70,7 +70,6 @@ void renderer::render(const scene& scene, const camera& camera)
 			std::for_each(std::execution::par, m_ImageHorizontalIt.begin(), m_ImageHorizontalIt.end(), [this, y](uint32_t x)
 				{
 					glm::vec4 color = per_pixel(x, y);
-					num_primary_rays++;
 
 					m_accumulation_data_[y * m_final_image_->GetWidth() + x] += color;
 					glm::vec4 accumulated_colour = m_accumulation_data_[y * m_final_image_->GetWidth() + x];
@@ -118,10 +117,10 @@ hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_dista
 	hit_info.object_index = object_index;
 
 
-	const sphere& closest_sphere = m_active_scene_->spheres[object_index];
+	const object* closest_object = m_active_scene_->objects[object_index].get();
 
 	hit_info.world_position = ray.origin + hit_distance * ray.direction;
-	hit_info.world_normal = normalize(hit_info.world_position - closest_sphere.centre);
+	hit_info.world_normal = normalize(hit_info.world_position - closest_object->position);
 
 	return hit_info;
 }
@@ -144,7 +143,6 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	for (int i = 0; i < ray_depth; i++)
 	{
 		hit_info hit_info = trace_ray(current_ray);
-		num_ray_sphere_tests++;
 
 		if (hit_info.hit_distance < 0.0f)
 		{
@@ -162,13 +160,11 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			break;
 		}
 
-		num_ray_sphere_isect++;
-
 		glm::vec3 local_attenuation{ 1.0f };
 		ray scattered_ray;
 
-		const sphere& sphere = m_active_scene_->spheres[hit_info.object_index];
-		material* material = m_active_scene_->materials[sphere.material_index].get();
+		const object* object = m_active_scene_->objects[hit_info.object_index].get();
+		material* material = m_active_scene_->materials[object->material_index].get();
 
 		if (dynamic_cast<diffuse*>(material))
 		{
@@ -205,42 +201,34 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 hit_info renderer::trace_ray(const ray& ray)
 {
 
-	// ray_direction = glm::normalize(ray_direction); // more expensive
-
-	if (m_active_scene_->spheres.size() == 0)
+	if (m_active_scene_->objects.size() == 0)
 	{
 		return miss(ray);
 	}
 
-	int closest_sphere = -1;
+	int closest_object = -1;
 	float hit_distance = FLT_MAX;
+	const float T_Min = 0.001f; // to avoid self-intersection
 
-	for (size_t i = 0; i < m_active_scene_->spheres.size(); i++)
+
+	for (size_t i = 0; i < m_active_scene_->objects.size(); i++)
 	{
-		const sphere& sphere = m_active_scene_->spheres[i];
-		float a = dot(ray.direction, ray.direction);
-		float b = 2.0f * dot(ray.direction, ray.origin - sphere.centre);
-		float c = dot(ray.origin - sphere.centre, ray.origin - sphere.centre) - sphere.radius * sphere.radius;
+		const object* object = m_active_scene_->objects[i].get();
 
-		if (float discriminant = b * b - 4.0f * a * c; discriminant >= 0)
+		if (float t = object->hit(ray); t > 0)
 		{
-			float q = (b > 0) ? -0.5f * (b + sqrt(discriminant)) : -0.5f * (b - sqrt(discriminant)); // ensures calculation is numerically stable
-
-			float t = std::min(q / a, c / q); // t is the entry point
-			const float T_Min = 0.001f; // to avoid self-intersection
-
 			if (t > T_Min && t < hit_distance)
 			{
 				hit_distance = t;
-				closest_sphere = (int)i;
+				closest_object = (int)i;
 			}
 		}
 	}
 
-	if (closest_sphere < 0)
+	if (closest_object < 0)
 	{
 		return miss(ray);
 	}
 
-	return closest_hit(ray, closest_sphere, hit_distance);
+	return closest_hit(ray, closest_object, hit_distance);
 }

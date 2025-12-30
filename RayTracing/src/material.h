@@ -10,13 +10,13 @@ public:
 
 	virtual ~material() {}
 
-	virtual bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const = 0;
+	virtual bool scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const = 0;
 };
 
 class diffuse : public material
 {
 public:
-	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override;
+	bool scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override;
 
 private:
 	glm::vec3 diffuse_reflect(const glm::vec3& normal) const;
@@ -27,7 +27,7 @@ class metal : public material
 public:
 	float roughness = 0.0f;
 
-	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override;
+	bool scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override;
 };
 
 class dielectric : public material
@@ -35,8 +35,8 @@ class dielectric : public material
 public:
 	float refractive_index = 1.5f;
 
-	bool scatter(ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override;
+	bool scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const override;
 
 private:
-	double calculate_reflectance(const float& cos_i, const float& n1, const float& n2) const;
+	double calculate_reflectance(const float cos_i, const float n1, const float n2) const;
 };
