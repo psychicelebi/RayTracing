@@ -1,6 +1,6 @@
 # Ray Tracer
 
-This is a CPU-based Ray Tracer built as a learning project initially following [The Cherno's Ray Tracing series](https://youtube.com/playlist?list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl&si=ZwHQRIjvuAOiruBz) however it includes several enhancements and custom features to deepen my understanding of computer graphics and rendering. The goal is to understand the fundamentals of graphics programming (particularly ray tracing) and practise using C++.
+This is a software Path Tracer built as a learning project initially following [The Cherno's Ray Tracing series](https://youtube.com/playlist?list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl&si=ZwHQRIjvuAOiruBz) however it includes several enhancements and custom features to deepen my understanding of computer graphics and rendering. The goal is to understand the fundamentals of graphics programming (particularly ray tracing) and practise using C++.
 
 ## Features
 - Basic ray tracing: Supports spheres.
@@ -12,10 +12,10 @@ This is a CPU-based Ray Tracer built as a learning project initially following [
 - Interactive UI: Adjust scene parameters (e.g. materials, lighting etc) in real time.
 - Multi-threading: Uses multiple CPU cores for faster rendering.
 - Refraction: Simulates transparent materials with Fresnel-based light bending.
+- Anti-aliasing: Uses jittered sub-pixel sampling to smooth edges and reduce aliasing.
 
 ## Planned Features
 
-- Anti-aliasing via supersampling.
 - Basic acceleration structure (BVH) for faster rendering.
 - Area lights for more realistic lighting.
 
