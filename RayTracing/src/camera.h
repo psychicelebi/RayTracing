@@ -27,9 +27,9 @@ private:
 	// void recalculate_ray_directions();
 private:
 	glm::mat4 m_Projection{ 1.0f };
-	glm::mat4 m_View{ 1.0f };
+	glm::mat4 m_View{ 1.0f }; // world-to-camera matrix
 	glm::mat4 m_InverseProjection{ 1.0f };
-	glm::mat4 m_InverseView{ 1.0f };
+	glm::mat4 m_InverseView{ 1.0f }; // camera-to-world matrix
 
 	float m_VerticalFOV = 45.0f;
 	float m_NearClip = 0.1f;

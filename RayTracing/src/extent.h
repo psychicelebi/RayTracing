@@ -3,6 +3,7 @@
 #include <glm/fwd.hpp>
 #include <array>
 #include <bitset>
+#include "ray.h"
 
 struct slab
 {
@@ -30,23 +31,7 @@ public:
 
 	extent() {}
 	
-	void expand(const extent& other)
-	{
-		for (size_t i = 0; i < 7; i++)
-		{
-			if (other.active[i])
-			{
-				if (!active[i])
-				{
-					slabs[i] = other.slabs[i];
-				}
-				else
-				{
-					slabs[i].d_near = std::min(slabs[i].d_near, other.slabs[i].d_near);
-					slabs[i].d_far = std::max(slabs[i].d_far, other.slabs[i].d_far);
-				}
-			}
-		}
-	}
-	
+	void expand(const extent& other);
+
+	float hit(const ray& ray) const;
 };

@@ -8,48 +8,34 @@ struct BVHNode
 {
 	extent bounds;
 	std::vector<int> object_indices;
-	std::vector<std::unique_ptr<BVHNode>> children;
+	std::array<std::unique_ptr<BVHNode>, 8> children;
+
+	bool is_leaf()
+	{
+		for (auto& child : children)
+		{
+			if (child)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 };
 
 class BVH
 {
 public:
-	BVH(std::vector<std::unique_ptr<object>> objects)
-	{
-		extent scene_aabb{};
+	std::unique_ptr<BVHNode> root;
 
-		for (size_t i = 0; i < objects.size(); i++)
-		{
-			scene_aabb.expand(objects[i].get()->get_extent({ 0,1,2 }));
-		}
+	const int MAX_OBJECTS = 2;
 
-		BVHNode node{ scene_aabb };
-		root = std::make_unique<BVHNode>(node);
-	}
+	BVH(const std::vector<std::unique_ptr<object>>& objects);
 
 private:
-	std::unique_ptr<BVHNode> root;
-	void build_tree(BVHNode* node, extent bounds, std::vector<int>& object_indices, const std::vector<std::unique_ptr<object>>& objects)
-	{
-		size_t i = 0;
-		const int max_objects = 2;
+	void build_tree(BVHNode* node, const std::vector<std::unique_ptr<object>>& objects, const std::vector<int>& object_indices);
 
-		while (i < objects.size())
-		{
-			for (int i = 0; i < 7; i++)
-			{
-				if (bounds.active[i])
-				{
-					glm::vec3 normal = extent::plane_set_normals[i];
-					
-					float distance = glm::dot(objects[i].get()->position, normal);
+	extent calculate_child_bounds(const extent& parent_bounds, int index) const;
 
-					if (distance > bounds.slabs[i].d_near && distance < bounds.slabs[i].d_far)
-					{
-						node->object_indices.push_back(i);
-					}
-				}
-			}
-		}
-	}
+	bool in_volume(const extent& bounds, const object* objects) const;
 };

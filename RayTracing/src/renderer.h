@@ -6,6 +6,7 @@
 #include "ray.h"
 #include "scene.h"
 #include "material.h"
+#include "BVH.h"
 #include "hit_info.h"
 #include "Walnut/Random.h"
 

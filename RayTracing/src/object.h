@@ -1,3 +1,4 @@
+#pragma once
 #include "ray.h"
 #include "extent.h"
 

@@ -206,29 +206,65 @@ hit_info renderer::trace_ray(const ray& ray)
 		return miss(ray);
 	}
 
-	int closest_object = -1;
-	float hit_distance = FLT_MAX;
-	const float T_Min = 0.001f; // to avoid self-intersection
+	int closest_object_index = -1;
+	float closest_t = FLT_MAX;
+	const float T_MIN = 0.001f; // to avoid self-intersection
 
+	std::priority_queue<std::pair<float, BVHNode*>,
+						std::vector<std::pair<float, BVHNode*>>,
+						std::greater<>> candidate_nodes{};
 
-	for (size_t i = 0; i < m_active_scene_->objects.size(); i++)
+	BVHNode* root = m_active_scene_->bvh.get()->root.get();
+	float root_t = root->bounds.hit(ray);
+
+	if (root_t >= 0.0f)
 	{
-		const object* object = m_active_scene_->objects[i].get();
+		candidate_nodes.push({ root_t, root });
+	}
 
-		if (float t = object->hit(ray); t > 0)
+	while (!candidate_nodes.empty())
+	{
+		auto [current_node_t, current_node] = candidate_nodes.top();
+		candidate_nodes.pop();
+
+		if (current_node_t < closest_t)
 		{
-			if (t > T_Min && t < hit_distance)
+			if (current_node->is_leaf())
 			{
-				hit_distance = t;
-				closest_object = (int)i;
+				for (int index : current_node->object_indices)
+				{
+					float t = m_active_scene_->objects[index]->hit(ray);
+					
+					if (t >= T_MIN && t < closest_t)
+					{
+						closest_t = t;
+						closest_object_index = index;
+					}
+				}
 			}
+			else
+			{
+				for (auto& child : current_node->children)
+				{
+					float t = child.get()->bounds.hit(ray);
+
+					if (t >= 0.0f)
+					{
+						candidate_nodes.push({t, child.get()});
+					}
+				}
+			}
+		}
+		else 
+		{
+			break;
 		}
 	}
 
-	if (closest_object < 0)
+	if (closest_object_index < 0)
 	{
 		return miss(ray);
 	}
 
-	return closest_hit(ray, closest_object, hit_distance);
+	return closest_hit(ray, closest_object_index, closest_t);
 }

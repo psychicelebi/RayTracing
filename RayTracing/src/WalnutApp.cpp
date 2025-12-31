@@ -115,15 +115,15 @@ public:
 			}
 			ImGui::EndChild();
 
-			// display spheres
-			ImGui::Text("Spheres");
-			ImGui::BeginChild("Spheres", ImVec2(0, 200), true);
+			// display objects
+			ImGui::Text("Objects");
+			ImGui::BeginChild("Objects", ImVec2(0, 200), true);
 			{
 				for (size_t i = 0; i < m_Scene.objects.size(); i++)
 				{
 					ImGui::PushID(i);
 
-					std::string header_title = "Sphere #" + std::to_string(i + 1);
+					std::string header_title = "Object #" + std::to_string(i + 1);
 
 					if (ImGui::CollapsingHeader(header_title.c_str()))
 					{
@@ -145,6 +145,7 @@ public:
 				if (ImGui::Button("New Sphere"))
 				{
 					m_Scene.objects.emplace_back(std::make_unique<sphere>());
+					m_Scene.bvh = std::make_unique<BVH>(m_Scene.objects);
 				}
 			}
 

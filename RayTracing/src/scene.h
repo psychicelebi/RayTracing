@@ -5,6 +5,7 @@
 #include <vector>
 #include "light.h"
 #include "object.h"
+#include "BVH.h"
 
 struct scene 
 {
@@ -13,5 +14,5 @@ struct scene
 	std::vector<std::unique_ptr<material>> materials{};
 	glm::vec3 background_colour{ 0.6f, 0.7f, 0.9f };
 
-	// std::unique_ptr<BVH> bvh;
+	std::unique_ptr<BVH> bvh{};
 };
