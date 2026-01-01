@@ -1,4 +1,5 @@
 #include "BVH.h"
+#include <iostream>
 
 BVH::BVH(const std::vector<std::unique_ptr<object>>& objects)
 {
@@ -19,32 +20,41 @@ BVH::BVH(const std::vector<std::unique_ptr<object>>& objects)
 
 void BVH::build_tree(BVHNode* node, const std::vector<std::unique_ptr<object>>& objects, const std::vector<int>& object_indices)
 {
-	for (int index : object_indices)
-	{
-		if (in_volume(node->bounds, objects[index].get()))
-		{
-			node->object_indices.push_back(index);
-		}
+	node->object_indices = object_indices;
 
+	// recalculate tight bounds for node's objects
+	if (!object_indices.empty()) {
+		node->bounds = objects[object_indices[0]]->get_extent({ 0,1,2 });
+		for (size_t i = 1; i < object_indices.size(); i++) {
+			node->bounds.expand(objects[object_indices[i]]->get_extent({ 0,1,2 }));
+		}
 	}
 
 	if (node->object_indices.size() > MAX_OBJECTS)
 	{
+		std::array<std::vector<int>, 8> child_object_indices{};
+
 		for (int i = 0; i < 8; i++)
 		{
 			node->children[i] = std::make_unique<BVHNode>();
 			node->children[i].get()->bounds = calculate_child_bounds(node->bounds, i);
-
-			std::vector<int> child_object_indices{};
-			for (int index : node->object_indices)
+		}
+		
+		for (int index : node->object_indices)
+		{
+			for (int i = 0; i < 8; i++)
 			{
 				if (in_volume(node->children[i].get()->bounds, objects[index].get()))
 				{
-					child_object_indices.push_back(index);
+					child_object_indices[i].push_back(index);
+					break;
 				}
 			}
+		}
 
-			build_tree(node->children[i].get(), objects, child_object_indices);
+		for (int i = 0; i < 8; i++)
+		{
+			build_tree(node->children[i].get(), objects, child_object_indices[i]);
 		}
 
 		node->object_indices.clear();
@@ -76,13 +86,13 @@ extent BVH::calculate_child_bounds(const extent& parent_bounds, int index) const
 
 bool BVH::in_volume(const extent& bounds, const object* object) const
 {
-	for (int j = 0; j < 3; j++)
+	for (int i = 0; i < 3; i++)
 	{
-		glm::vec3 normal = extent::plane_set_normals[j];
+		glm::vec3 normal = extent::plane_set_normals[i];
 
 		float distance = glm::dot(object->position, normal);
 
-		if (distance < bounds.slabs[j].d_near || distance > bounds.slabs[j].d_far)
+		if (distance < bounds.slabs[i].d_near || distance > bounds.slabs[i].d_far)
 		{
 			return false;
 		}

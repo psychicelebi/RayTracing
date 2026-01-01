@@ -12,14 +12,7 @@ struct BVHNode
 
 	bool is_leaf()
 	{
-		for (auto& child : children)
-		{
-			if (child)
-			{
-				return false;
-			}
-		}
-		return true;
+		return children[0] == nullptr;
 	}
 };
 
