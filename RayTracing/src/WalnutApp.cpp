@@ -30,6 +30,8 @@ public:
 
 	virtual void OnUIRender() override
 	{
+		bool changed = false;
+
 		ImGui::Begin("Settings");
 		{
 			ImGui::Text("Last render: %.3fms", m_LastRenderTime);
@@ -129,8 +131,6 @@ public:
 					{
 						object* object = m_Scene.objects[i].get();
 
-						bool changed = false;
-
 						changed |= ImGui::DragFloat3("Position", glm::value_ptr(object->position), 0.05f);
 						changed |= ImGui::DragInt("Material", &object->material_index, 1.0f, 0, (int)m_Scene.materials.size() - 1);
 
@@ -139,10 +139,6 @@ public:
 							changed |= ImGui::DragFloat("Radius", &sphere_object->radius, 0.05f);
 						}
 
-						if (changed)
-						{
-							m_Scene.bvh = std::make_unique<BVH>(m_Scene.objects);
-						}
 						ImGui::Separator();
 					}
 
@@ -152,7 +148,7 @@ public:
 				if (ImGui::Button("New Sphere"))
 				{
 					m_Scene.objects.emplace_back(std::make_unique<sphere>());
-					m_Scene.bvh = std::make_unique<BVH>(m_Scene.objects);
+					changed |= true;
 				}
 			}
 
@@ -243,6 +239,11 @@ public:
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		if (changed)
+		{
+			m_Scene.bvh = std::make_unique<BVH>(m_Scene.objects);
+		}
 
 		Render();
 	}

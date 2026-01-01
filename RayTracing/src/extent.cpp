@@ -53,6 +53,7 @@ void extent::expand(const extent& other)
 			if (!active[i])
 			{
 				slabs[i] = other.slabs[i];
+				active[i] = true;
 			}
 			else
 			{

@@ -1,5 +1,4 @@
 #include "BVH.h"
-#include <iostream>
 
 BVH::BVH(const std::vector<std::unique_ptr<object>>& objects)
 {
@@ -15,20 +14,12 @@ BVH::BVH(const std::vector<std::unique_ptr<object>>& objects)
 	root = std::make_unique<BVHNode>();
 	root.get()->bounds = scene_aabb;
 
-	build_tree(root.get(), objects,all_indices);
+	build_tree(root.get(), objects, all_indices);
 }
 
 void BVH::build_tree(BVHNode* node, const std::vector<std::unique_ptr<object>>& objects, const std::vector<int>& object_indices)
 {
 	node->object_indices = object_indices;
-
-	// recalculate tight bounds for node's objects
-	if (!object_indices.empty()) {
-		node->bounds = objects[object_indices[0]]->get_extent({ 0,1,2 });
-		for (size_t i = 1; i < object_indices.size(); i++) {
-			node->bounds.expand(objects[object_indices[i]]->get_extent({ 0,1,2 }));
-		}
-	}
 
 	if (node->object_indices.size() > MAX_OBJECTS)
 	{
@@ -58,6 +49,17 @@ void BVH::build_tree(BVHNode* node, const std::vector<std::unique_ptr<object>>& 
 		}
 
 		node->object_indices.clear();
+	}
+	else 
+	{
+		// recalculate tight final bounds for node's objects
+		if (!object_indices.empty()) 
+		{
+			node->bounds = objects[object_indices[0]]->get_extent({ 3,4,5,6 });
+			for (size_t i = 1; i < object_indices.size(); i++) {
+				node->bounds.expand(objects[object_indices[i]]->get_extent({ 3,4,5,6 }));
+			}
+		}
 	}
 }
 
