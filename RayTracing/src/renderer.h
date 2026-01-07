@@ -28,8 +28,9 @@ public:
 
 	struct settings
 	{
-		bool accumulate{ true };
+		bool accumulate{ false };
 		bool skybox{ false };
+		int rayDepth{ 5 };
 	};
 
 	settings& getSettings() { return m_settings; }
@@ -45,10 +46,7 @@ private:
 	const scene* m_activeScene{};
 	const camera* m_activeCamera{};
 
-	void renderImage(uint32_t x, uint32_t y);
-	hit_info traceRay(const ray& ray);
-	hit_info closestHit(const ray& ray, int objectIndex, float hitDistance);
-	hit_info miss(const ray& ray);
+	void renderPixel(uint32_t x, uint32_t y);
 
-	glm::vec4 perPixel(uint32_t x, uint32_t y); // RayGen in DX and Vulkan
+	glm::vec4 shadePixel(uint32_t x, uint32_t y); // RayGen in DX and Vulkan
 };

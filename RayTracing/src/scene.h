@@ -7,12 +7,18 @@
 #include "object.h"
 #include "BVH.h"
 
-struct scene 
+class scene 
 {
+public:
 	std::vector<std::unique_ptr<object>> objects{};
 	std::vector<std::unique_ptr<light>> lights{};
 	std::vector<std::unique_ptr<material>> materials{};
-	glm::vec3 background_colour{ 0.6f, 0.7f, 0.9f };
+	glm::vec3 backgroundColour{ 0.6f, 0.7f, 0.9f };
 
 	std::unique_ptr<BVH> bvh{};
+
+	hit_info traceRay(const ray& ray) const;
+
+private:
+	hit_info makeHit(const ray& ray, int objectIndex, float hitDistance) const;
 };

@@ -217,7 +217,7 @@ public:
 
 				ImGui::BeginDisabled(m_Renderer.getSettings().skybox);
 				{
-					ImGui::ColorEdit3("Background Colour", glm::value_ptr(m_Scene.background_colour));
+					ImGui::ColorEdit3("Background Colour", glm::value_ptr(m_Scene.backgroundColour));
 				}
 				ImGui::EndDisabled();
 			}

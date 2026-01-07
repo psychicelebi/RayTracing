@@ -9,9 +9,9 @@ public:
 	glm::vec3 colour{ 1.0f };
 	float intensity = 1.0f;
 
-	virtual glm::vec3 get_direction(const glm::vec3& world_position) const = 0;
+	virtual glm::vec3 getDirection(const glm::vec3& world_position) const = 0;
 
-	virtual glm::vec3 get_intensity(const glm::vec3& world_position) const = 0;
+	virtual glm::vec3 getIntensity(const glm::vec3& world_position) const = 0;
 
 	virtual glm::vec3& get_vector() = 0;
 
@@ -23,12 +23,12 @@ class spherical_light : public light
 public:
 	glm::vec3 position{ 1.0f };
 
-	glm::vec3 get_direction(const glm::vec3& world_position) const override
+	glm::vec3 getDirection(const glm::vec3& world_position) const override
 	{
 		return glm::normalize(position - world_position);
 	}
 
-	glm::vec3 get_intensity(const glm::vec3& world_position) const
+	glm::vec3 getIntensity(const glm::vec3& world_position) const
 	{
 		return colour * intensity / (4.0f * glm::pi<float>() * glm::length(position - world_position));
 	}
@@ -41,12 +41,12 @@ class distant_light : public light
 public:
 	glm::vec3 direction{ -1.0f };
 
-	glm::vec3 get_direction(const glm::vec3& world_position) const override
+	glm::vec3 getDirection(const glm::vec3& world_position) const override
 	{
 		return -direction;
 	}
 
-	glm::vec3 get_intensity(const glm::vec3& world_position) const
+	glm::vec3 getIntensity(const glm::vec3& world_position) const
 	{
 		return intensity * colour;
 	}

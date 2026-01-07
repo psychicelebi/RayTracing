@@ -16,9 +16,9 @@ public:
 	const glm::mat4& get_view() const { return m_View; }
 	const glm::mat4& get_inverse_view() const { return m_InverseView; }
 	
-	const glm::vec3& get_position() const { return m_Position; }
+	const glm::vec3& getPosition() const { return m_Position; }
 	const glm::vec3& get_direction() const { return m_ForwardDirection; }
-	glm::vec3 get_ray_direction(uint32_t x, uint32_t y) const;
+	glm::vec3 getRayDirection(uint32_t x, uint32_t y) const;
 
 	float get_rotation_speed();
 private:

@@ -120,7 +120,7 @@ void camera::recalculate_view()
 	m_InverseView = glm::inverse(m_View);
 }
 
-glm::vec3 camera::get_ray_direction(uint32_t x, uint32_t y) const
+glm::vec3 camera::getRayDirection(uint32_t x, uint32_t y) const
 {
 	glm::vec2 jitter = { Random::getReal(0.0f, 1.0f) , Random::getReal(0.0f, 1.0f) };
 
