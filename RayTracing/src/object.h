@@ -11,7 +11,9 @@ public:
 
 	virtual float hit(const ray &ray) const = 0;
 
-	virtual extent get_extent(const std::vector<int> normal_indices) const = 0;
+	virtual extent get_extent(const std::vector<int>& normal_indices) const = 0;
+
+	virtual glm::vec3 getNormalAt(const glm::vec3& worldPosition) const = 0;
 };
 
 class sphere : public object
@@ -21,6 +23,8 @@ public:
 
 	float hit(const ray& ray) const override;
 
-	extent get_extent(const std::vector<int> normal_indices) const override;
+	extent get_extent(const std::vector<int>& normal_indices) const override;
+
+	virtual glm::vec3 getNormalAt(const glm::vec3& worldPosition) const override;
 	
 };

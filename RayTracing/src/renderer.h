@@ -15,44 +15,40 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <atomic>
+#include <ranges>
 
 class renderer
 {
 public:
-	renderer() = default;
+	void onResize(uint32_t width, uint32_t height);
+	void render(const scene& scene, const camera& camera);
+	void resetFrameIndex() { m_frameIndex = 1; }
 
-	void on_resize(uint32_t width, uint32_t height);
-	void render(const scene& scence, const camera& camera);
-	void reset_frame_index() { m_frame_index_ = 1; }
-
-	std::shared_ptr<Walnut::Image> get_final_image() const
-	{
-		return m_final_image_;
-	}
+	std::shared_ptr<Walnut::Image> getFinalImage() const { return m_finalImage; }
 
 	struct settings
 	{
-		bool accumulate = true;
-		bool skybox = false;
+		bool accumulate{ true };
+		bool skybox{ false };
 	};
-	settings& get_settings() { return m_settings_; }
+
+	settings& getSettings() { return m_settings; }
 
 private:
-	std::shared_ptr<Walnut::Image> m_final_image_;
-	uint32_t* m_image_data_ = nullptr;
-	glm::vec4* m_accumulation_data_ = nullptr;
-	uint32_t m_frame_index_ = 1;
+	std::shared_ptr<Walnut::Image> m_finalImage;
+	std::vector<uint32_t> m_imageData{};
+	std::vector<glm::vec4> m_accumulationData{};
+	uint32_t m_frameIndex{ 1 };
 
-	settings m_settings_;
+	settings m_settings;
 
-	std::vector<uint32_t> m_ImageHorizontalIt, m_ImageVerticalIt;
+	const scene* m_activeScene{};
+	const camera* m_activeCamera{};
 
-	const scene* m_active_scene_ = nullptr;
-	const camera* m_active_camera_ = nullptr;
-
-	hit_info trace_ray(const ray& ray);
-	hit_info closest_hit(const ray& ray, int object_index, float hit_distance);
+	void renderImage(uint32_t x, uint32_t y);
+	hit_info traceRay(const ray& ray);
+	hit_info closestHit(const ray& ray, int objectIndex, float hitDistance);
 	hit_info miss(const ray& ray);
 
-	glm::vec4 per_pixel(uint32_t x, uint32_t y); // RayGen in DX and Vulkan
+	glm::vec4 perPixel(uint32_t x, uint32_t y); // RayGen in DX and Vulkan
 };

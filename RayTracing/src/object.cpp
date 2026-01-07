@@ -18,7 +18,7 @@ float sphere::hit(const ray& ray) const
 	return -1;
 }
 
-extent sphere::get_extent(const std::vector<int> normal_indices) const
+extent sphere::get_extent(const std::vector<int>& normal_indices) const
 {
 	extent extent{};
 	for (size_t i = 0; i < normal_indices.size(); i++)
@@ -32,4 +32,9 @@ extent sphere::get_extent(const std::vector<int> normal_indices) const
 	}
 
 	return extent;
+}
+
+glm::vec3 sphere::getNormalAt(const glm::vec3& worldPosition) const
+{
+	return glm::normalize(worldPosition - position);
 }

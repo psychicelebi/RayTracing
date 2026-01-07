@@ -7,8 +7,8 @@
 // Diffuse implementation
 bool diffuse::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const
 {
-	scattered_ray.origin = hit_info.world_position;
-	scattered_ray.direction = hit_info.world_normal + diffuse_reflect(hit_info.world_normal);
+	scattered_ray.origin = hit_info.worldPosition;
+	scattered_ray.direction = hit_info.worldNormal + diffuse_reflect(hit_info.worldNormal);
 
 	attenuation = albedo;
 	return true;
@@ -31,8 +31,8 @@ glm::vec3 diffuse::diffuse_reflect(const glm::vec3& normal) const
 // Metal implementation
 bool metal::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const
 {
-	glm::vec3 reflection = reflect(current_ray.direction, hit_info.world_normal);
-	scattered_ray.origin = hit_info.world_position;
+	glm::vec3 reflection = reflect(current_ray.direction, hit_info.worldNormal);
+	scattered_ray.origin = hit_info.worldPosition;
 	scattered_ray.direction = normalize(reflection + roughness * Walnut::Random::Vec3(-1.0f, 1.0f));
 
 	attenuation = albedo;
@@ -45,7 +45,7 @@ bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_i
 	static std::mt19937 rng{ std::random_device{}() };
 	static std::uniform_real_distribution<float> probability(0.0f, 1.0f);
 
-	glm::vec3 normal = hit_info.world_normal;
+	glm::vec3 normal = hit_info.worldNormal;
 	float n1 = 1.0f;
 	float n2 = refractive_index;
 	float cos_i = glm::min(glm::dot(current_ray.direction, normal), 1.0f); // cosine of incident angle
@@ -73,7 +73,7 @@ bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_i
 		scattered_ray.direction = refracted_perp + refracted_parallel;
 	}
 
-	scattered_ray.origin = hit_info.world_position;
+	scattered_ray.origin = hit_info.worldPosition;
 	attenuation = albedo;
 	return true;
 }

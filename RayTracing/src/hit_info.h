@@ -3,9 +3,9 @@
 
 struct hit_info
 {
-	float hit_distance;
-	glm::vec3 world_position;
-	glm::vec3 world_normal;
+	float hitDistance;
+	glm::vec3 worldPosition;
+	glm::vec3 worldNormal;
 
-	int object_index;
+	int objectIndex;
 };

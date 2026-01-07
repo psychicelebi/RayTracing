@@ -25,7 +25,7 @@ public:
 	virtual void OnUpdate(float ts)
 	{
 		if(m_Camera.on_update(ts))
-			m_Renderer.reset_frame_index();
+			m_Renderer.resetFrameIndex();
 	}
 
 	virtual void OnUIRender() override
@@ -45,11 +45,11 @@ public:
 				Render();
 			}
 
-			ImGui::Checkbox("Accumulate", &m_Renderer.get_settings().accumulate);
+			ImGui::Checkbox("Accumulate", &m_Renderer.getSettings().accumulate);
 
 			if (ImGui::Button("Reset"))
 			{
-				m_Renderer.reset_frame_index();
+				m_Renderer.resetFrameIndex();
 			}
 		}
 		ImGui::End();
@@ -213,9 +213,9 @@ public:
 			ImGui::Text("Background");
 			ImGui::BeginChild("Background", ImVec2(0, 200), true);
 			{
-				ImGui::Checkbox("Enable Skybox", &m_Renderer.get_settings().skybox);
+				ImGui::Checkbox("Enable Skybox", &m_Renderer.getSettings().skybox);
 
-				ImGui::BeginDisabled(m_Renderer.get_settings().skybox);
+				ImGui::BeginDisabled(m_Renderer.getSettings().skybox);
 				{
 					ImGui::ColorEdit3("Background Colour", glm::value_ptr(m_Scene.background_colour));
 				}
@@ -231,7 +231,7 @@ public:
 			m_ViewportWidth = ImGui::GetContentRegionAvail().x;
 			m_ViewportHeight = ImGui::GetContentRegionAvail().y;
 
-			auto image = m_Renderer.get_final_image();
+			auto image = m_Renderer.getFinalImage();
 			if (image)
 			{
 				ImGui::Image(image->GetDescriptorSet(), { (float)image->GetWidth(), (float)image->GetHeight() });
@@ -252,7 +252,7 @@ public:
 	{
 		Timer timer; 
 
-		m_Renderer.on_resize(m_ViewportWidth, m_ViewportHeight);
+		m_Renderer.onResize(m_ViewportWidth, m_ViewportHeight);
 		m_Camera.on_resize(m_ViewportWidth, m_ViewportHeight);
 		m_Renderer.render(m_Scene, m_Camera);
 

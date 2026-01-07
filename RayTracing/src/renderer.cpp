@@ -2,7 +2,7 @@
 
 namespace utils
 {
-	static uint32_t convert_to_RGBA(const glm::vec4& color)
+	static uint32_t convertToRGBA(const glm::vec4& color)
 	{
 		auto r = (uint8_t)(color.r * 255.0f);
 		auto g = (uint8_t)(color.g * 255.0f);
@@ -14,127 +14,97 @@ namespace utils
 	}
 }
 
-void renderer::on_resize(uint32_t width, uint32_t height)
+void renderer::onResize(uint32_t width, uint32_t height)
 {
-	if (m_final_image_)
+	if (m_finalImage)
 	{
 		// no resize necessary
-		if (m_final_image_->GetWidth() == width && m_final_image_->GetHeight() == height)
+		if (m_finalImage->GetWidth() == width && m_finalImage->GetHeight() == height)
 		{
 			return;
 		}
 
-		m_final_image_->Resize(width, height);
+		m_finalImage->Resize(width, height);
 	}
 	else 
 	{
-		m_final_image_ = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
+		m_finalImage = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
 	}
 
-	delete[] m_image_data_;
-	m_image_data_ = new uint32_t[width * height];
-
-	delete[] m_accumulation_data_;
-	m_accumulation_data_ = new glm::vec4[width * height];
-
-	m_ImageHorizontalIt.resize(width);
-	m_ImageVerticalIt.resize(height);
-
-	for (uint32_t i = 0; i < width; i++)
-	{
-		m_ImageHorizontalIt[i] = i;
-	}
-
-	for (uint32_t i = 0; i < height; i++)
-	{
-		m_ImageVerticalIt[i] = i;
-	}
+	m_imageData.resize(width * height);
+	m_accumulationData.resize(width * height);
 }
 
 void renderer::render(const scene& scene, const camera& camera)
 {
-	m_active_camera_ = &camera;
-	m_active_scene_ = &scene;
+	m_activeCamera = &camera;
+	m_activeScene = &scene;
 
-	if (m_frame_index_ == 1)
+	if (m_frameIndex == 1)
 	{
-		memset(m_accumulation_data_, 0, m_final_image_->GetWidth() * m_final_image_->GetHeight() * sizeof(glm::vec4));
+		std::fill(m_accumulationData.begin(), m_accumulationData.end(), glm::vec4(0.0f));
 	}
 
 	// render every pixel
 
+	auto cols = std::views::iota(0u, m_finalImage->GetHeight());
+	auto rows = std::views::iota(0u, m_finalImage->GetWidth());
+
+
 #define MT 1 // multi-threading
 #if MT
-	std::for_each(std::execution::par, m_ImageVerticalIt.begin(), m_ImageVerticalIt.end(), [this](uint32_t y) 
-		{
-			std::for_each(std::execution::par, m_ImageHorizontalIt.begin(), m_ImageHorizontalIt.end(), [this, y](uint32_t x)
-				{
-					glm::vec4 color = per_pixel(x, y);
 
-					m_accumulation_data_[y * m_final_image_->GetWidth() + x] += color;
-					glm::vec4 accumulated_colour = m_accumulation_data_[y * m_final_image_->GetWidth() + x];
-					accumulated_colour /= m_frame_index_;
-
-					accumulated_colour = clamp(accumulated_colour, glm::vec4(0.0f), glm::vec4(1.0f));
-					m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(accumulated_colour);
-
-				});
-		});
-#else
-	for (uint32_t y = 0; y < m_final_image_->GetHeight(); y++)
+	std::for_each(std::execution::par, cols.begin(), cols.end(), [this, rows](uint32_t y)
 	{
-		for (uint32_t x = 0; x < m_final_image_->GetWidth(); x++)
+		std::for_each(std::execution::par, rows.begin(), rows.end(), [this, y](uint32_t x){ renderImage(x, y); });
+	});
+#else
+	for (auto y : cols)
+	{
+		for (auto x : rows)
 		{
-			glm::vec4 color = per_pixel(x, y);
-
-			m_accumulation_data_[y * m_final_image_->GetWidth() + x] += color;
-			glm::vec4 accumulated_colour = m_accumulation_data_[y * m_final_image_->GetWidth() + x];
-			accumulated_colour /= m_frame_index_;
-
-			accumulated_colour = clamp(accumulated_colour, glm::vec4(0.0f), glm::vec4(1.0f));
-			m_image_data_[y * m_final_image_->GetWidth() + x] = utils::convert_to_RGBA(accumulated_colour);
+			renderImage(x, y);
 		}
 	}
 #endif
 
+	m_finalImage->SetData(m_imageData.data());
 
-	m_final_image_->SetData(m_image_data_);
-
-	if (m_settings_.accumulate)
+	if (m_settings.accumulate)
 	{
-		m_frame_index_++;
+		m_frameIndex++;
 	}
 	else 
 	{
-		m_frame_index_ = 1;
+		m_frameIndex = 1;
 	}
 }
 
-hit_info renderer::closest_hit(const ray& ray, int object_index, float hit_distance)
+hit_info renderer::closestHit(const ray& ray, int objectIndex, float hitDistance)
 {
-	hit_info hit_info;
-	hit_info.hit_distance = hit_distance;
-	hit_info.object_index = object_index;
+	hit_info hitInfo;
+	hitInfo.hitDistance = hitDistance;
+	hitInfo.objectIndex = objectIndex;
 
 
-	const object* closest_object = m_active_scene_->objects[object_index].get();
+	const object* closestObject = m_activeScene->objects[objectIndex].get();
 
-	hit_info.world_position = ray.origin + hit_distance * ray.direction;
-	hit_info.world_normal = normalize(hit_info.world_position - closest_object->position);
+	hitInfo.worldPosition = ray.origin + hitDistance * ray.direction;
+	hitInfo.worldNormal = closestObject->getNormalAt(hitInfo.worldPosition);
 
-	return hit_info;
+	return hitInfo;
 }
 
 hit_info renderer::miss(const ray& ray)
 {
-	hit_info hit_info;
-	hit_info.hit_distance = -1;
-	return hit_info;
+	hit_info hitInfo;
+	hitInfo.hitDistance = -1;
+	return hitInfo;
 }
 
-glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
+glm::vec4 renderer::perPixel(uint32_t x, uint32_t y)
 {
-	ray current_ray{ m_active_camera_->get_position(), normalize(m_active_camera_->get_ray_direction(x, y))};
+	ray current_ray{ m_activeCamera->get_position(), normalize(m_activeCamera->get_ray_direction(x, y))};
 
 	int ray_depth = 5;
 	glm::vec3 final_albedo{ 0.0f };
@@ -142,11 +112,11 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 
 	for (int i = 0; i < ray_depth; i++)
 	{
-		hit_info hit_info = trace_ray(current_ray);
+		hit_info hit_info = traceRay(current_ray);
 
-		if (hit_info.hit_distance < 0.0f)
+		if (hit_info.hitDistance < 0.0f)
 		{
-			if (m_settings_.skybox)
+			if (m_settings.skybox)
 			{
 				float t = 0.5f * current_ray.direction.y + 1.0f;
 				glm::vec3 sky_colour = (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f);
@@ -154,7 +124,7 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 			}
 			else
 			{
-				final_albedo += attenuation * m_active_scene_->background_colour;
+				final_albedo += attenuation * m_activeScene->background_colour;
 			}
 
 			break;
@@ -163,23 +133,23 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 		glm::vec3 local_attenuation{ 1.0f };
 		ray scattered_ray;
 
-		const object* object = m_active_scene_->objects[hit_info.object_index].get();
-		material* material = m_active_scene_->materials[object->material_index].get();
+		const object* object = m_activeScene->objects[hit_info.objectIndex].get();
+		material* material = m_activeScene->materials[object->material_index].get();
 
 		if (dynamic_cast<diffuse*>(material))
 		{
-			for (int i = 0; i < m_active_scene_->lights.size(); i++)
+			for (int i = 0; i < m_activeScene->lights.size(); i++)
 			{
-				light* light = m_active_scene_->lights[i].get();
-				glm::vec3 light_direction = light->get_direction(hit_info.world_position);
+				light* light = m_activeScene->lights[i].get();
+				glm::vec3 light_direction = light->get_direction(hit_info.worldPosition);
 
-				ray shadow_ray{ hit_info.world_position, light_direction };
+				ray shadow_ray{ hit_info.worldPosition, light_direction };
 
-				if (trace_ray(shadow_ray).hit_distance < 0.0f)
+				if (traceRay(shadow_ray).hitDistance < 0.0f)
 				{
 					final_albedo += material->albedo / glm::pi<float>()
-						* light->get_intensity(hit_info.world_position)
-						* std::max(0.0f, dot(hit_info.world_normal, light_direction));
+						* light->get_intensity(hit_info.worldPosition)
+						* std::max(0.0f, dot(hit_info.worldNormal, light_direction));
 				}
 			}
 		}
@@ -198,10 +168,24 @@ glm::vec4 renderer::per_pixel(uint32_t x, uint32_t y)
 	return { final_albedo, 1.0f };
 }
 
-hit_info renderer::trace_ray(const ray& ray)
+void renderer::renderImage(uint32_t x, uint32_t y)
+{
+	glm::vec4 colour = perPixel(x, y);
+
+	size_t index = y * m_finalImage->GetWidth() + x;
+
+	m_accumulationData[index] += colour;
+	glm::vec4 accumulatedColour = m_accumulationData[index];
+	accumulatedColour /= m_frameIndex;
+
+	accumulatedColour = clamp(accumulatedColour, glm::vec4(0.0f), glm::vec4(1.0f));
+	m_imageData[index] = utils::convertToRGBA(accumulatedColour);
+}
+
+hit_info renderer::traceRay(const ray& ray)
 {
 
-	if (m_active_scene_->objects.size() == 0)
+	if (m_activeScene->objects.size() == 0)
 	{
 		return miss(ray);
 	}
@@ -214,7 +198,7 @@ hit_info renderer::trace_ray(const ray& ray)
 						std::vector<std::pair<float, BVHNode*>>,
 						std::greater<>> candidate_nodes{};
 
-	BVHNode* root = m_active_scene_->bvh.get()->root.get();
+	BVHNode* root = m_activeScene->bvh.get()->root.get();
 	float root_t = root->bounds.hit(ray);
 
 	if (root_t >= 0.0f)
@@ -233,7 +217,7 @@ hit_info renderer::trace_ray(const ray& ray)
 			{
 				for (int index : current_node->object_indices)
 				{
-					float t = m_active_scene_->objects[index]->hit(ray);
+					float t = m_activeScene->objects[index]->hit(ray);
 					
 					if (t >= T_MIN && t < closest_t)
 					{
@@ -266,5 +250,5 @@ hit_info renderer::trace_ray(const ray& ray)
 		return miss(ray);
 	}
 
-	return closest_hit(ray, closest_object_index, closest_t);
+	return closestHit(ray, closest_object_index, closest_t);
 }
