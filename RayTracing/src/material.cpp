@@ -14,7 +14,9 @@ bool diffuse::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, fl
 	rayOut.origin = hitInfo.worldPosition + 0.001f * hitInfo.worldNormal;
 	rayOut.direction = glm::normalize(scatterDirection);
 
-	pdf = glm::one_over_pi<float>();
+	float cosTheta = glm::dot(hitInfo.worldNormal, rayOut.direction);
+
+	pdf = cosTheta * glm::one_over_pi<float>();
 	return true;
 }
 

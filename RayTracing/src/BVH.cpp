@@ -26,21 +26,38 @@ void BVH::build_tree(BVHNode* node, const std::vector<std::unique_ptr<object>>& 
 	{
 		std::array<std::vector<int>, 8> child_object_indices{};
 
+		for (int index : node->object_indices)
+		{
+			glm::vec3 center = objects[index]->position;
+
+			int child_index = 0;
+			for (int i = 0; i < 3; i++)
+			{
+				glm::vec3 normal = extent::plane_set_normals[i];
+				float d_near = node->bounds.slabs[i].d_near;
+				float d_far = node->bounds.slabs[i].d_far;
+				float midpoint = (d_near + d_far) / 2.0f;
+
+				float distance = glm::dot(center, normal);
+
+				if (distance >= midpoint)
+				{
+					child_index |= (1 << i);
+				}
+			}
+
+			child_object_indices[child_index].push_back(index);
+		}
+
 		for (int i = 0; i < 8; i++)
 		{
 			node->children[i] = std::make_unique<BVHNode>();
-			node->children[i].get()->bounds = calculate_child_bounds(node->bounds, i);
-		}
-		
-		for (int index : node->object_indices)
-		{
-			for (int i = 0; i < 8; i++)
+
+			node->children[i]->bounds = calculate_child_bounds(node->bounds, i);
+
+			for (int index : child_object_indices[i])
 			{
-				if (in_volume(node->children[i].get()->bounds, objects[index].get()))
-				{
-					child_object_indices[i].push_back(index);
-					break;
-				}
+				node->children[i]->bounds.expand(objects[index]->get_extent({ 0, 1, 2 }));
 			}
 		}
 
@@ -85,22 +102,4 @@ extent BVH::calculate_child_bounds(const extent& parent_bounds, int index) const
 	}
 
 	return child_bounds;
-}
-
-bool BVH::in_volume(const extent& bounds, const object* object) const
-{
-	for (int i = 0; i < 3; i++)
-	{
-		glm::vec3 normal = extent::plane_set_normals[i];
-
-		float distance = glm::dot(object->position, normal);
-
-		if (distance < bounds.slabs[i].d_near || distance > bounds.slabs[i].d_far)
-		{
-			return false;
-		}
-	}
-
-	return true;
-
 }
