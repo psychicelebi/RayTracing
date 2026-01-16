@@ -105,33 +105,23 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 			break;
 		}
 
-		glm::vec3 localAttenuation{ 1.0f };
 		ray scatteredRay;
-
 		material* material = m_activeScene->materials[hitInfo.materialIndex].get();
+		glm::vec3 emission = material->emitted();
 
-		for (auto& light : m_activeScene->lights)
+		if (glm::length(emission) > 0.0f)
 		{
-			glm::vec3 lightDirection = light->getDirection(hitInfo.worldPosition);
-			float cosTheta = glm::dot(hitInfo.worldNormal, lightDirection);
-
-			if (cosTheta > 0.0f)
-			{
-				const float SHADOW_BIAS{ 0.001f };
-				ray shadowRay{ hitInfo.worldPosition + hitInfo.worldNormal * SHADOW_BIAS, lightDirection };
-
-				if (!m_activeScene->traceRay(shadowRay).didHit())
-				{
-					glm::vec3 brdf = material->brdf(-currentRay.direction, lightDirection, hitInfo.worldNormal);
-					radiance += throughput * brdf * light->getIntensity(hitInfo.worldPosition) * cosTheta;
-				}
-			}
-			
+			radiance += throughput * emission;
+			break;
 		}
 
-		if (material->scatter(currentRay, scatteredRay, hitInfo, localAttenuation))
+		float pdf{};
+		if (material->scatter(currentRay, scatteredRay, hitInfo, pdf))
 		{
-			throughput *= localAttenuation;
+			glm::vec3 brdf = material->brdf(-currentRay.direction, scatteredRay.direction, hitInfo.worldNormal);
+			float cosTheta = glm::dot(hitInfo.worldNormal, scatteredRay.direction);
+
+			throughput *= (brdf * cosTheta) / pdf;
 			currentRay = scatteredRay;
 		}
 		else 

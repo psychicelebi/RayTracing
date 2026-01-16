@@ -19,7 +19,6 @@ public:
 		: m_Camera(60.0f, 0.1f, 100.0f) 
 	{
 		m_Scene.materials.emplace_back(std::make_unique<diffuse>());
-		m_Scene.lights.emplace_back(std::make_unique<spherical_light>());
 	}
 
 	virtual void OnUpdate(float ts)
@@ -76,12 +75,19 @@ public:
 
 						if (auto* metal_material = dynamic_cast<metal*>(material))
 						{
-							ImGui::DragFloat("Roughness", &metal_material->roughness, 0.05f, 0.0f, 1.0f);
+							ImGui::DragFloat("Roughness", &metal_material->roughness, 0.05f, 0.001f, 1.0f);
 						}
+						if (auto* emissive_material = dynamic_cast<emissive*>(material))
+						{
+							ImGui::ColorEdit3("Colour", glm::value_ptr(emissive_material->baseColour));
+							ImGui::DragFloat("Intensity", &emissive_material->emissionStrength, 0.05f, 1.0f, 50.0f);
+						}
+						/*
 						else if (auto* dielectric_material = dynamic_cast<dielectric*>(material))
 						{
 							ImGui::DragFloat("Refractive Index", &dielectric_material->refractive_index, 0.05f, 1.0f, 3.0f);
 						}
+						*/
 
 						ImGui::Separator();
 					}
@@ -106,11 +112,19 @@ public:
 						ImGui::CloseCurrentPopup();
 					}
 
+					if (ImGui::Button("Emissive"))
+					{
+						m_Scene.materials.emplace_back(std::make_unique<emissive>());
+						ImGui::CloseCurrentPopup();
+					}
+
+					/*
 					if (ImGui::Button("Dielectric"))
 					{
 						m_Scene.materials.emplace_back(std::make_unique<dielectric>());
 						ImGui::CloseCurrentPopup();
 					}
+					*/
 
 					ImGui::EndPopup();
 				}
@@ -155,6 +169,7 @@ public:
 			ImGui::EndChild();
 
 			// move light
+			/*
 			ImGui::Text("Light Source Controls");
 			ImGui::BeginChild("Light Source Controls", ImVec2(0, 200), true);
 			{
@@ -207,6 +222,8 @@ public:
 			}
 
 			ImGui::EndChild();
+
+			*/
 
 			// display background
 

@@ -30,4 +30,27 @@ namespace BRDF
 
 		return geometrySchlickGGXG1(dotNV, k) * geometrySchlickGGXG1(dotNL, k);
 	}
+
+	inline glm::vec3 sampleGGX(glm::vec3 normal, float roughness, float u1, float u2)
+	{
+		float a = roughness * roughness;
+		float aSquared = a * a;
+
+		float phi = 2.0f * 3.14159265f * u1;
+
+		float cosTheta = sqrt(glm::max(0.0f, (1.0f - u2) / (1.0f + (aSquared - 1.0f) * u2)));
+		float sinTheta = sqrt(glm::max(0.0f, 1.0f - cosTheta * cosTheta));
+
+		glm::vec3 hLocal;
+		hLocal.x = cos(phi) * sinTheta;
+		hLocal.y = sin(phi) * sinTheta;
+		hLocal.z = cosTheta;
+
+
+		glm::vec3 up = abs(normal.z) < 0.999f ? glm::vec3(0, 0, 1) : glm::vec3(1, 0, 0);
+		glm::vec3 tangent = glm::normalize(glm::cross(up, normal));
+		glm::vec3 bitangent = glm::cross(normal, tangent);
+
+		return tangent * hLocal.x + bitangent * hLocal.y + normal * hLocal.z;
+	}
 }

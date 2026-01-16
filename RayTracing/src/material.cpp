@@ -2,35 +2,48 @@
 #include "BRDF.h"
 
 // Diffuse implementation
-bool diffuse::scatter(const ray& currentRay, ray& scatteredRay, const hit_info& hitInfo, glm::vec3& attenuation) const
+bool diffuse::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, float& pdf) const
 {
-	glm::vec3 scatterDirection = hitInfo.worldNormal + Walnut::Random::InUnitSphere();
+	glm::vec3 scatterDirection = glm::normalize(hitInfo.worldNormal + Walnut::Random::InUnitSphere());
 
 	if (glm::length(scatterDirection) < 0.001f )
 	{
 		scatterDirection = hitInfo.worldNormal;
 	}
 
-	scatteredRay.origin = hitInfo.worldPosition;
-	scatteredRay.direction = glm::normalize(scatterDirection);
+	rayOut.origin = hitInfo.worldPosition + 0.001f * hitInfo.worldNormal;
+	rayOut.direction = glm::normalize(scatterDirection);
 
-	attenuation = baseColour;
+	pdf = glm::one_over_pi<float>();
 	return true;
 }
 
 glm::vec3 diffuse::brdf(const glm::vec3& rayDirection, const glm::vec3 lightDirection, const glm::vec3& normal) const
 {
-	return baseColour / glm::pi<float>();
+	return baseColour * glm::one_over_pi<float>();
 }
 
 // Metal implementation
-bool metal::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const
+bool metal::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, float& pdf) const
 {
-	glm::vec3 reflection = reflect(current_ray.direction, hit_info.worldNormal);
-	scattered_ray.origin = hit_info.worldPosition;
-	scattered_ray.direction = normalize(reflection + roughness * Walnut::Random::Vec3(-1.0f, 1.0f));
+	glm::vec3 viewDirection = glm::normalize(-rayIn.direction);
 
-	attenuation = baseColour;
+	float u1 = Random::getReal(0.0f, 1.0f);
+	float u2 = Random::getReal(0.0f, 1.0f);
+
+	glm::vec3 halfVector = BRDF::sampleGGX(hitInfo.worldNormal, roughness, u1, u2);
+	glm::vec3 lightDirection = glm::reflect(-viewDirection, halfVector);
+
+	float dotNL = glm::dot(hitInfo.worldNormal, lightDirection);
+	if (dotNL <= 0.0f) return false;
+
+	rayOut = { hitInfo.worldPosition + 0.001f * hitInfo.worldNormal, lightDirection };
+
+	float dotNH = glm::max(glm::dot(hitInfo.worldNormal, halfVector), 0.0f);
+	float dotVH = glm::max(glm::dot(viewDirection, halfVector), 0.0f);
+	float D = BRDF::distributionGGX(dotNH, roughness);
+
+	pdf = (D * dotNH) / (4.0f * dotVH);
 	return true;
 }
 
@@ -38,10 +51,10 @@ glm::vec3 metal::brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirec
 {
 	glm::vec3 halfVector = glm::normalize(viewDirection + lightDirection);
 
-	float dotNV = glm::clamp(glm::dot(normal, lightDirection), 0.001f, 1.0f); // avoids 0 division
+	float dotNV = glm::clamp(glm::dot(normal, viewDirection), 0.001f, 1.0f); // avoids 0 division
 	float dotNL = glm::clamp(glm::dot(normal, lightDirection), 0.001f, 1.0f);
 	float dotNH = glm::clamp(glm::dot(normal, halfVector), 0.0f, 1.0f);
-	float dotVH = glm::clamp(glm::dot(normal, halfVector), 0.0f, 1.0f);
+	float dotVH = glm::clamp(glm::dot(viewDirection, halfVector), 0.0f, 1.0f);
 
 	float D = BRDF::distributionGGX(dotNH, roughness);
 	glm::vec3 F = BRDF::fresnelSchlick(dotVH, baseColour);
@@ -53,8 +66,9 @@ glm::vec3 metal::brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirec
 	return numerator / denominator;
 }
 
+/*
 // Dielectric implementation
-bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const
+bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, float& attenuation) const
 {
 	static std::mt19937 rng{ std::random_device{}() };
 	static std::uniform_real_distribution<float> probability(0.0f, 1.0f);
@@ -88,7 +102,7 @@ bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_i
 	}
 
 	scattered_ray.origin = hit_info.worldPosition;
-	attenuation = baseColour;
+	attenuation = 1.0f;
 	return true;
 }
 
@@ -103,3 +117,4 @@ double dielectric::calculate_reflectance(const float cos_i, const float n1, cons
 	base_reflectance *= base_reflectance;
 	return base_reflectance + (1.0f - base_reflectance) * glm::pow((1.0f - cos_i), 5);
 }
+*/
