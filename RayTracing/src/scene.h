@@ -18,6 +18,7 @@ public:
 	std::unique_ptr<BVH> bvh{};
 
 	hit_info traceRay(const ray& ray) const;
+	static glm::vec3 getSkyColour(const ray& ray);
 
 private:
 	hit_info makeHit(const ray& ray, int objectIndex, float hitDistance) const;

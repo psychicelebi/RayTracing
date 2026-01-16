@@ -85,3 +85,11 @@ hit_info scene::makeHit(const ray& ray, int objectIndex, float hitDistance) cons
 
 	return hitInfo;
 }
+
+glm::vec3 scene::getSkyColour(const ray& ray)
+{
+	float t = 0.5f * (ray.direction.y + 1.0f);
+	glm::vec3 skyColour = (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f);
+
+	return skyColour;
+}

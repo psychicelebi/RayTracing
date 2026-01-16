@@ -1,8 +1,5 @@
 #include "material.h"
-#include <Walnut/Random.h>
-#include "Random.h"
-#include <random>
-#include <algorithm>
+#include "BRDF.h"
 
 // Diffuse implementation
 bool diffuse::scatter(const ray& currentRay, ray& scatteredRay, const hit_info& hitInfo, glm::vec3& attenuation) const
@@ -17,22 +14,13 @@ bool diffuse::scatter(const ray& currentRay, ray& scatteredRay, const hit_info& 
 	scatteredRay.origin = hitInfo.worldPosition;
 	scatteredRay.direction = glm::normalize(scatterDirection);
 
-	attenuation = albedo;
+	attenuation = baseColour;
 	return true;
 }
 
-glm::vec3 diffuse::diffuse_reflect(const glm::vec3& normal) const
+glm::vec3 diffuse::brdf(const glm::vec3& rayDirection, const glm::vec3 lightDirection, const glm::vec3& normal) const
 {
-	glm::vec3 vector = Walnut::Random::InUnitSphere();
-
-	if (glm::dot(vector, normal) > 0.0f)
-	{
-		return vector;
-	}
-	else
-	{
-		return -vector;
-	}
+	return baseColour / glm::pi<float>();
 }
 
 // Metal implementation
@@ -42,8 +30,27 @@ bool metal::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& 
 	scattered_ray.origin = hit_info.worldPosition;
 	scattered_ray.direction = normalize(reflection + roughness * Walnut::Random::Vec3(-1.0f, 1.0f));
 
-	attenuation = albedo;
+	attenuation = baseColour;
 	return true;
+}
+
+glm::vec3 metal::brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirection, const glm::vec3& normal) const
+{
+	glm::vec3 halfVector = glm::normalize(viewDirection + lightDirection);
+
+	float dotNV = glm::clamp(glm::dot(normal, lightDirection), 0.001f, 1.0f); // avoids 0 division
+	float dotNL = glm::clamp(glm::dot(normal, lightDirection), 0.001f, 1.0f);
+	float dotNH = glm::clamp(glm::dot(normal, halfVector), 0.0f, 1.0f);
+	float dotVH = glm::clamp(glm::dot(normal, halfVector), 0.0f, 1.0f);
+
+	float D = BRDF::distributionGGX(dotNH, roughness);
+	glm::vec3 F = BRDF::fresnelSchlick(dotVH, baseColour);
+	float G = BRDF::geometrySmith(dotNV, dotNL, roughness);
+
+	glm::vec3 numerator = D * F * G;
+	float denominator = 4 * dotNL * dotNV;
+
+	return numerator / denominator;
 }
 
 // Dielectric implementation
@@ -81,8 +88,13 @@ bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_i
 	}
 
 	scattered_ray.origin = hit_info.worldPosition;
-	attenuation = albedo;
+	attenuation = baseColour;
 	return true;
+}
+
+glm::vec3 dielectric::brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirection, const glm::vec3& normal) const
+{
+	return glm::vec3();
 }
 
 double dielectric::calculate_reflectance(const float cos_i, const float n1, const float n2) const

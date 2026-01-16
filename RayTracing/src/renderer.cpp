@@ -12,14 +12,6 @@ namespace utils
 		uint32_t result = a << 24 | b << 16 | g << 8 | r;
 		return result;
 	}
-
-	static glm::vec3 getSkyColour(const ray& ray)
-	{
-		float t = 0.5f * (ray.direction.y + 1.0f);
-		glm::vec3 skyColour = (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.6f, 0.7f, 0.9f);
-
-		return skyColour;
-	}
 }
 
 void renderer::onResize(uint32_t width, uint32_t height)
@@ -95,8 +87,6 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 	glm::vec3 radiance{ 0.0f };
 	glm::vec3 throughput{ 1.0f };
 
-	constexpr float SHADOW_BIAS = 0.001f;
-
 	for (int i = 0; i < m_settings.rayDepth; i++)
 	{
 		hit_info hitInfo = m_activeScene->traceRay(currentRay);
@@ -105,7 +95,7 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 		{
 			if (m_settings.skybox)
 			{
-				radiance += throughput * utils::getSkyColour(currentRay);
+				radiance += throughput * scene::getSkyColour(currentRay);
 			}
 			else
 			{
@@ -127,11 +117,12 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 
 			if (cosTheta > 0.0f)
 			{
+				const float SHADOW_BIAS{ 0.001f };
 				ray shadowRay{ hitInfo.worldPosition + hitInfo.worldNormal * SHADOW_BIAS, lightDirection };
 
 				if (!m_activeScene->traceRay(shadowRay).didHit())
 				{
-					glm::vec3 brdf = material->albedo / glm::pi<float>();
+					glm::vec3 brdf = material->brdf(-currentRay.direction, lightDirection, hitInfo.worldNormal);
 					radiance += throughput * brdf * light->getIntensity(hitInfo.worldPosition) * cosTheta;
 				}
 			}

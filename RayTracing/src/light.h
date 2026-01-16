@@ -30,7 +30,8 @@ public:
 
 	glm::vec3 getIntensity(const glm::vec3& world_position) const
 	{
-		return colour * intensity / (4.0f * glm::pi<float>() * glm::length(position - world_position));
+		float distance = glm::length(position - world_position);
+		return colour * intensity / (4.0f * glm::pi<float>() * distance * distance);
 	}
 
 	glm::vec3& get_vector() override { return position; }

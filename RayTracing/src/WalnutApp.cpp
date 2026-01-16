@@ -72,7 +72,7 @@ public:
 
 					if (ImGui::CollapsingHeader(header_title.c_str()))
 					{
-						ImGui::ColorEdit3("Albedo", glm::value_ptr(material->albedo));
+						ImGui::ColorEdit3("Albedo", glm::value_ptr(material->baseColour));
 
 						if (auto* metal_material = dynamic_cast<metal*>(material))
 						{
