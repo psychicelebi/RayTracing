@@ -2,6 +2,7 @@
 
 BVH::BVH(const std::vector<std::unique_ptr<object>>& objects)
 {
+	// build(objects)
 	extent scene_aabb{};
 	std::vector<int> all_indices(objects.size());
 

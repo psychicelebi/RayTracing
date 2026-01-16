@@ -5,10 +5,17 @@
 #include <algorithm>
 
 // Diffuse implementation
-bool diffuse::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, glm::vec3& attenuation) const
+bool diffuse::scatter(const ray& currentRay, ray& scatteredRay, const hit_info& hitInfo, glm::vec3& attenuation) const
 {
-	scattered_ray.origin = hit_info.worldPosition;
-	scattered_ray.direction = hit_info.worldNormal + diffuse_reflect(hit_info.worldNormal);
+	glm::vec3 scatterDirection = hitInfo.worldNormal + Walnut::Random::InUnitSphere();
+
+	if (glm::length(scatterDirection) < 0.001f )
+	{
+		scatterDirection = hitInfo.worldNormal;
+	}
+
+	scatteredRay.origin = hitInfo.worldPosition;
+	scatteredRay.direction = glm::normalize(scatterDirection);
 
 	attenuation = albedo;
 	return true;

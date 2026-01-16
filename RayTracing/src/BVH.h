@@ -21,7 +21,7 @@ class BVH
 public:
 	std::unique_ptr<BVHNode> root;
 
-	const int MAX_OBJECTS = 2;
+	const int MAX_OBJECTS{ 2 };
 
 	BVH(const std::vector<std::unique_ptr<object>>& objects);
 

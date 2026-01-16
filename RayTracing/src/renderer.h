@@ -36,7 +36,7 @@ public:
 	settings& getSettings() { return m_settings; }
 
 private:
-	std::shared_ptr<Walnut::Image> m_finalImage;
+	std::shared_ptr<Walnut::Image> m_finalImage{};
 	std::vector<uint32_t> m_imageData{};
 	std::vector<glm::vec4> m_accumulationData{};
 	uint32_t m_frameIndex{ 1 };
@@ -47,6 +47,6 @@ private:
 	const camera* m_activeCamera{};
 
 	void renderPixel(uint32_t x, uint32_t y);
-
 	glm::vec4 shadePixel(uint32_t x, uint32_t y); // RayGen in DX and Vulkan
+
 };

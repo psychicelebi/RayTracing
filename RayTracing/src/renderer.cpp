@@ -93,7 +93,7 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 	ray currentRay{ m_activeCamera->getPosition(), normalize(m_activeCamera->getRayDirection(x, y))};
 
 	glm::vec3 radiance{ 0.0f };
-	glm::vec3 attenuation{ 1.0f };
+	glm::vec3 throughput{ 1.0f };
 
 	constexpr float SHADOW_BIAS = 0.001f;
 
@@ -105,11 +105,11 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 		{
 			if (m_settings.skybox)
 			{
-				radiance += attenuation * utils::getSkyColour(currentRay);
+				radiance += throughput * utils::getSkyColour(currentRay);
 			}
 			else
 			{
-				radiance += attenuation * m_activeScene->backgroundColour;
+				radiance += throughput * m_activeScene->backgroundColour;
 			}
 
 			break;
@@ -120,35 +120,35 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 
 		material* material = m_activeScene->materials[hitInfo.materialIndex].get();
 
-		// TO-DO: implement brdf & area lights
-		if (dynamic_cast<diffuse*>(material))
+		for (auto& light : m_activeScene->lights)
 		{
-			for (int i = 0; i < m_activeScene->lights.size(); i++)
-			{
-				light* light = m_activeScene->lights[i].get();
-				glm::vec3 lightDirection = light->getDirection(hitInfo.worldPosition);
+			glm::vec3 lightDirection = light->getDirection(hitInfo.worldPosition);
+			float cosTheta = glm::dot(hitInfo.worldNormal, lightDirection);
 
+			if (cosTheta > 0.0f)
+			{
 				ray shadowRay{ hitInfo.worldPosition + hitInfo.worldNormal * SHADOW_BIAS, lightDirection };
 
 				if (!m_activeScene->traceRay(shadowRay).didHit())
 				{
-					radiance += material->albedo / glm::pi<float>()
-						* light->getIntensity(hitInfo.worldPosition)
-						* std::max(0.0f, dot(hitInfo.worldNormal, lightDirection))
-						* attenuation;
+					glm::vec3 brdf = material->albedo / glm::pi<float>();
+					radiance += throughput * brdf * light->getIntensity(hitInfo.worldPosition) * cosTheta;
 				}
 			}
+			
 		}
 
 		if (material->scatter(currentRay, scatteredRay, hitInfo, localAttenuation))
 		{
-			attenuation *= localAttenuation;
+			throughput *= localAttenuation;
 			currentRay = scatteredRay;
 		}
 		else 
 		{
 			break;
 		}
+
+		if (glm::length(throughput) < 0.01f) break;
 	}
 
 	return { radiance, 1.0f };
