@@ -35,9 +35,6 @@ public:
 		{
 			ImGui::Text("Last render: %.3fms", m_LastRenderTime);
 			ImGui::Text("FPS: %.1f", 1000.0f / m_LastRenderTime);
-			//ImGui::Text("Total no. of primary rays: %lu", m_Renderer.num_primary_rays.load());
-			//ImGui::Text("Total no. of ray-sphere tests: %lu", m_Renderer.num_ray_sphere_tests.load());
-			//ImGui::Text("Total no. of ray-sphere intersections: %lu", m_Renderer.num_ray_sphere_isect.load());
 
 			if (ImGui::Button("Render"))
 			{
@@ -82,12 +79,6 @@ public:
 							ImGui::ColorEdit3("Colour", glm::value_ptr(emissive_material->baseColour));
 							ImGui::DragFloat("Intensity", &emissive_material->emissionStrength, 0.05f, 1.0f, 50.0f);
 						}
-						/*
-						else if (auto* dielectric_material = dynamic_cast<dielectric*>(material))
-						{
-							ImGui::DragFloat("Refractive Index", &dielectric_material->refractive_index, 0.05f, 1.0f, 3.0f);
-						}
-						*/
 
 						ImGui::Separator();
 					}
@@ -167,63 +158,6 @@ public:
 			}
 
 			ImGui::EndChild();
-
-			// move light
-			/*
-			ImGui::Text("Light Source Controls");
-			ImGui::BeginChild("Light Source Controls", ImVec2(0, 200), true);
-			{
-				for (size_t i = 0; i < m_Scene.lights.size(); i++)
-				{
-
-					ImGui::PushID(i);
-
-					std::string header_title = "Light #" + std::to_string(i);
-					if (i == 0)
-						header_title = "Default Light";
-
-					if (ImGui::CollapsingHeader(header_title.c_str()))
-					{
-						light* light = m_Scene.lights[i].get();
-
-						ImGui::ColorEdit3("Albedo", glm::value_ptr(light->colour));
-						ImGui::SliderFloat("Intensity", &light->intensity, 0.0f, 100.0f);
-
-						ImGui::SliderFloat("x", &light->get_vector().x, -10, 10);
-						ImGui::SliderFloat("y", &light->get_vector().y, -10, 10);
-						ImGui::SliderFloat("z", &light->get_vector().z, -10, 10);
-
-						ImGui::Separator();
-					}
-
-					ImGui::PopID();
-
-				}
-
-				if (ImGui::Button("New Light"))
-					ImGui::OpenPopup("Select Light");
-
-				if (ImGui::BeginPopup("Select Light"))
-				{
-					if (ImGui::Button("Spherical"))
-					{
-						m_Scene.lights.emplace_back(std::make_unique<spherical_light>());
-						ImGui::CloseCurrentPopup();
-					}
-
-					if (ImGui::Button("Distant"))
-					{
-						m_Scene.lights.emplace_back(std::make_unique<distant_light>());
-						ImGui::CloseCurrentPopup();
-					}
-
-					ImGui::EndPopup();
-				}
-			}
-
-			ImGui::EndChild();
-
-			*/
 
 			// display background
 

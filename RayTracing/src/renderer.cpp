@@ -106,7 +106,7 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 		}
 
 		ray scatteredRay;
-		material* material = m_activeScene->materials[hitInfo.materialIndex].get();
+		auto& material = m_activeScene->materials[hitInfo.materialIndex];
 		glm::vec3 emission = material->emitted();
 
 		if (glm::length(emission) > 0.0f)
