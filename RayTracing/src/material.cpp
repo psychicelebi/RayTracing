@@ -1,18 +1,23 @@
 #include "material.h"
 #include "BRDF.h"
+#include "Random.h"
+#include <glm/gtc/constants.hpp>
+#include <random>
+#include <Walnut/Random.h>
+#include <iostream>
 
 // Diffuse implementation
 bool diffuse::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, float& pdf) const
 {
-	glm::vec3 scatterDirection = glm::normalize(hitInfo.worldNormal + Walnut::Random::InUnitSphere());
+	glm::vec3 lightDirection = glm::normalize(hitInfo.worldNormal + Walnut::Random::InUnitSphere());
 
-	if (glm::length(scatterDirection) < 0.001f )
+	if (glm::length(lightDirection) < 0.001f )
 	{
-		scatterDirection = hitInfo.worldNormal;
+		lightDirection = hitInfo.worldNormal;
 	}
 
 	rayOut.origin = hitInfo.worldPosition + 0.001f * hitInfo.worldNormal;
-	rayOut.direction = glm::normalize(scatterDirection);
+	rayOut.direction = glm::normalize(lightDirection);
 
 	float cosTheta = glm::dot(hitInfo.worldNormal, rayOut.direction);
 
@@ -29,11 +34,7 @@ glm::vec3 diffuse::brdf(const glm::vec3& rayDirection, const glm::vec3 lightDire
 bool metal::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, float& pdf) const
 {
 	glm::vec3 viewDirection = glm::normalize(-rayIn.direction);
-
-	float u1 = Random::getReal(0.0f, 1.0f);
-	float u2 = Random::getReal(0.0f, 1.0f);
-
-	glm::vec3 halfVector = BRDF::sampleGGX(hitInfo.worldNormal, roughness, u1, u2);
+	glm::vec3 halfVector = getHalfVector(hitInfo.worldNormal);
 	glm::vec3 lightDirection = glm::reflect(-viewDirection, halfVector);
 
 	float dotNL = glm::dot(hitInfo.worldNormal, lightDirection);
@@ -60,63 +61,127 @@ glm::vec3 metal::brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirec
 
 	float D = BRDF::distributionGGX(dotNH, roughness);
 	glm::vec3 F = BRDF::fresnelSchlick(dotVH, baseColour);
-	float G = BRDF::geometrySmith(dotNV, dotNL, roughness);
+	float G = BRDF::geometrySmith(glm::abs(dotNV), glm::abs(dotNL), roughness);
 
 	glm::vec3 numerator = D * F * G;
-	float denominator = 4 * dotNL * dotNV;
+	float denominator = 4.0f * glm::abs(dotNL) * glm::abs(dotNV);
 
 	return numerator / denominator;
 }
 
-/*
 // Dielectric implementation
-bool dielectric::scatter(const ray& current_ray, ray& scattered_ray, const hit_info& hit_info, float& attenuation) const
+bool dielectric::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, float& pdf) const
 {
-	static std::mt19937 rng{ std::random_device{}() };
-	static std::uniform_real_distribution<float> probability(0.0f, 1.0f);
+	glm::vec3 viewDirection = -rayIn.direction;
+	glm::vec3 normal = hitInfo.worldNormal;
 
-	glm::vec3 normal = hit_info.worldNormal;
-	float n1 = 1.0f;
-	float n2 = refractive_index;
-	float cos_i = glm::min(glm::dot(current_ray.direction, normal), 1.0f); // cosine of incident angle
+	float dotNV = glm::dot(normal, viewDirection);
 
-	if (cos_i > 0.0f)
+	float eta = dotNV > 0.0f ? (1.0f / refractiveIndex) : refractiveIndex;
+	glm::vec3 orientedNormal = dotNV > 0.0f ? normal : -normal;
+
+	glm::vec3 halfVector = getHalfVector(orientedNormal);
+	float dotVH = glm::clamp(glm::dot(viewDirection, halfVector), 0.001f, 1.0f);
+	float dotNH = glm::clamp(glm::dot(orientedNormal, halfVector), 0.001f, 1.0f);
+
+	float F0 = (refractiveIndex - 1.0f) / (refractiveIndex + 1.0f);
+	F0 *= F0;
+	float F = BRDF::fresnelSchlick(dotVH, glm::vec3(F0)).x;
+	float D = BRDF::distributionGGX(dotNH, roughness);
+
+	glm::vec3 lightDirection = glm::refract(-viewDirection, halfVector, eta);
+
+	if (glm::length(lightDirection) < 0.001f || F >= Random::getReal<float>(0.0f, 1.0f))
 	{
-		normal = -normal;
-		std::swap(n1, n2);
-	}
+		lightDirection = glm::reflect(-viewDirection, halfVector);
+		rayOut.direction = normalize(lightDirection);
 
-	float abs_cos_i = glm::abs(cos_i);
-	float sin_i = glm::sqrt(1 - abs_cos_i * abs_cos_i); // sine of incident angle
-	float eta = n1 / n2;
-	float reflectance = calculate_reflectance(abs_cos_i, n1, n2);
-
-	if (eta * sin_i > 1.0f || reflectance >= Random::getReal<float>(0.0f, 1.0f))
-	{
-		glm::vec3 reflection = reflect(current_ray.direction, normal);
-		scattered_ray.direction = normalize(reflection);
+		pdf = (D * dotNH) / (4.0f * dotVH);
 	}
 	else
 	{
-		glm::vec3 refracted_perp = eta * (current_ray.direction + abs_cos_i * normal);
-		glm::vec3 refracted_parallel = -glm::sqrt(glm::abs(1.0f - glm::dot(refracted_perp, refracted_perp))) * normal;
-		scattered_ray.direction = refracted_perp + refracted_parallel;
+		rayOut.direction = normalize(lightDirection);
+
+		float dotLH = glm::dot(lightDirection, halfVector);
+		float numerator = D * dotNH * glm::abs(dotLH) * eta * eta;
+		float sqrtDenominator = dotVH + eta * dotLH;
+		sqrtDenominator = glm::max(glm::abs(sqrtDenominator), 0.001f) * glm::sign(sqrtDenominator);
+		pdf = numerator / (sqrtDenominator * sqrtDenominator);
 	}
 
-	scattered_ray.origin = hit_info.worldPosition;
-	attenuation = 1.0f;
+	rayOut.origin = hitInfo.worldPosition + (glm::dot(rayOut.direction, orientedNormal) > 0.0f ? 0.001f : -0.001f) * hitInfo.worldNormal;
+	pdf = glm::max(pdf, 0.0001f);
 	return true;
 }
 
 glm::vec3 dielectric::brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirection, const glm::vec3& normal) const
 {
-	return glm::vec3();
+	float dotNV = glm::dot(normal, viewDirection);
+	float dotNL = glm::dot(normal, lightDirection);
+
+	bool isReflection = dotNV * dotNL > 0.0f;
+
+	float eta = dotNV > 0.0f ? (1.0f / refractiveIndex) : refractiveIndex;
+	glm::vec3 orientedNormal = dotNV > 0.0f ? normal : -normal;
+
+	glm::vec3 halfVector{};
+	if (isReflection)
+	{
+		halfVector = glm::normalize(viewDirection + lightDirection);
+	}
+	else
+	{
+		halfVector = glm::normalize(viewDirection + lightDirection * eta);
+	}
+
+	if (glm::dot(halfVector, orientedNormal) < 0.0f)
+	{
+		halfVector = -halfVector;
+	}
+
+	float absNV = glm::max(glm::abs(dotNV), 0.001f);
+	float absNL = glm::max(glm::abs(dotNL), 0.001f);
+	float dotNH = glm::clamp(glm::dot(orientedNormal, halfVector), 0.001f, 1.0f);
+	float dotVH = glm::clamp(glm::dot(viewDirection, halfVector), 0.001f, 1.0f);
+	float dotLH = glm::dot(lightDirection, halfVector);
+
+	float D = BRDF::distributionGGX(dotNH, roughness);
+	float G = BRDF::geometrySmith(absNV, absNL, roughness);
+	float F0 = (refractiveIndex - 1.0f) / (refractiveIndex + 1.0f);
+	F0 *= F0;
+	float F = BRDF::fresnelSchlick(dotVH, glm::vec3(F0)).x;
+
+	if (isReflection)
+	{
+		float numerator = D * F * G;
+		float denominator = 4.0f * absNV * absNL;
+
+		return glm::vec3(numerator / denominator);
+	}
+	else
+	{
+		float numerator = glm::abs(dotVH) * glm::abs(dotLH) * (1.0f - F) * D * G;
+		float sqrtDenominator = dotVH + eta * dotLH;
+		sqrtDenominator = glm::max(glm::abs(sqrtDenominator), 0.001f) * glm::sign(sqrtDenominator);
+		float denominator = (sqrtDenominator * sqrtDenominator) * absNV * absNL;
+		denominator = glm::max(denominator, 0.00001f);
+
+		float brdfValue = (1.0f / (eta * eta)) * numerator / denominator;
+		brdfValue = glm::min(brdfValue, 50.0f);
+
+		if (Random::getReal(0.0f, 1.0f) < 0.001f) {
+			std::cout << "BRDF refraction: " << brdfValue << ", eta: " << eta << std::endl;
+		}
+
+
+		return glm::vec3(brdfValue);
+	}
 }
 
-double dielectric::calculate_reflectance(const float cos_i, const float n1, const float n2) const
+glm::vec3 material::getHalfVector(const glm::vec3& normal) const
 {
-	float base_reflectance = (n1 - n2) / (n1 + n2);
-	base_reflectance *= base_reflectance;
-	return base_reflectance + (1.0f - base_reflectance) * glm::pow((1.0f - cos_i), 5);
+	float u1 = Random::getReal(0.0f, 1.0f);
+	float u2 = Random::getReal(0.0f, 1.0f);
+
+	return BRDF::sampleGGX(normal, roughness, u1, u2);
 }
-*/

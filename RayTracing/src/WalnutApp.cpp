@@ -68,7 +68,7 @@ public:
 
 					if (ImGui::CollapsingHeader(header_title.c_str()))
 					{
-						ImGui::ColorEdit3("Albedo", glm::value_ptr(material->baseColour));
+						ImGui::ColorEdit3("Colour", glm::value_ptr(material->baseColour));
 
 						if (auto* metal_material = dynamic_cast<metal*>(material))
 						{
@@ -76,8 +76,12 @@ public:
 						}
 						if (auto* emissive_material = dynamic_cast<emissive*>(material))
 						{
-							ImGui::ColorEdit3("Colour", glm::value_ptr(emissive_material->baseColour));
 							ImGui::DragFloat("Intensity", &emissive_material->emissionStrength, 0.05f, 1.0f, 50.0f);
+						}
+						if (auto* dielectric_material = dynamic_cast<dielectric*>(material))
+						{
+							ImGui::DragFloat("IOR", &dielectric_material->refractiveIndex, 0.05f, 1.0f, 2.5f);
+							ImGui::DragFloat("Roughness", &dielectric_material->roughness, 0.05f, 0.001f, 1.0f);
 						}
 
 						ImGui::Separator();
@@ -108,14 +112,11 @@ public:
 						m_Scene.materials.emplace_back(std::make_unique<emissive>());
 						ImGui::CloseCurrentPopup();
 					}
-
-					/*
 					if (ImGui::Button("Dielectric"))
 					{
 						m_Scene.materials.emplace_back(std::make_unique<dielectric>());
 						ImGui::CloseCurrentPopup();
 					}
-					*/
 
 					ImGui::EndPopup();
 				}

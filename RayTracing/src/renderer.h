@@ -30,7 +30,7 @@ public:
 	{
 		bool accumulate{ false };
 		bool skybox{ false };
-		int rayDepth{ 5 };
+		int rayDepth{ 12 };
 	};
 
 	settings& getSettings() { return m_settings; }

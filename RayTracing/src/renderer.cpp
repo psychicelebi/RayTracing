@@ -121,7 +121,7 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 			glm::vec3 brdf = material->brdf(-currentRay.direction, scatteredRay.direction, hitInfo.worldNormal);
 			float cosTheta = glm::dot(hitInfo.worldNormal, scatteredRay.direction);
 
-			throughput *= (brdf * cosTheta) / pdf;
+			throughput *= (brdf * glm::abs(cosTheta)) / pdf;
 			currentRay = scatteredRay;
 		}
 		else 

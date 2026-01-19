@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace BRDF
 {
@@ -8,19 +9,20 @@ namespace BRDF
 		float roughnessSquared = roughness * roughness;
 		float cosThetaSquared = cosTheta * cosTheta;
 		float denominator = cosThetaSquared * (roughnessSquared - 1.0f) + 1.0f;
+		denominator *= denominator;
 
-		const float c = (roughnessSquared)*glm::one_over_pi<float>();
-		return c / (denominator * denominator);
+		const float c = roughnessSquared * glm::one_over_pi<float>();
+		return c / denominator;
 	}
 
-	inline glm::vec3 fresnelSchlick(float cosTheta, const glm::vec3 baseColour)
+	inline glm::vec3 fresnelSchlick(float cosTheta, const glm::vec3 F0)
 	{
-		return baseColour + (1.0f - baseColour) * glm::pow((1 - cosTheta), 5.0f);
+		return F0 + (1.0f - F0) * glm::pow((1.0f - cosTheta), 5.0f);
 	}
 
 	inline float geometrySchlickGGXG1(float cosTheta, float k)
 	{
-		return cosTheta / (cosTheta * (1 - k) + k);
+		return cosTheta / (cosTheta * (1.0f - k) + k);
 	}
 
 	inline float geometrySmith(float dotNV, float dotNL, float roughness)
@@ -36,21 +38,18 @@ namespace BRDF
 		float a = roughness * roughness;
 		float aSquared = a * a;
 
-		float phi = 2.0f * 3.14159265f * u1;
+		float phi = 2.0f * glm::pi<float>() * u1;
 
-		float cosTheta = sqrt(glm::max(0.0f, (1.0f - u2) / (1.0f + (aSquared - 1.0f) * u2)));
-		float sinTheta = sqrt(glm::max(0.0f, 1.0f - cosTheta * cosTheta));
+		float cosTheta = glm::sqrt(glm::max(0.0f, (1.0f - u2) / (1.0f + (aSquared - 1.0f) * u2)));
+		float sinTheta = glm::sqrt(glm::max(0.0f, 1.0f - cosTheta * cosTheta));
 
-		glm::vec3 hLocal;
-		hLocal.x = cos(phi) * sinTheta;
-		hLocal.y = sin(phi) * sinTheta;
-		hLocal.z = cosTheta;
+		glm::vec3 hLocal{ glm::cos(phi) * sinTheta, glm::sin(phi) * sinTheta, cosTheta };
 
+		glm::vec3 helper = (glm::abs(normal.x) > 0.9f) ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
 
-		glm::vec3 up = abs(normal.z) < 0.999f ? glm::vec3(0, 0, 1) : glm::vec3(1, 0, 0);
-		glm::vec3 tangent = glm::normalize(glm::cross(up, normal));
+		glm::vec3 tangent = glm::normalize(glm::cross(helper, normal));
 		glm::vec3 bitangent = glm::cross(normal, tangent);
 
-		return tangent * hLocal.x + bitangent * hLocal.y + normal * hLocal.z;
+		return glm::mat3(tangent, bitangent, normal) * hLocal;
 	}
 }
