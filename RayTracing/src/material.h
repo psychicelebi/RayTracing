@@ -50,13 +50,3 @@ public:
 	virtual glm::vec3 emitted() const override { return baseColour * emissionStrength; }
 
 };
-
-class dielectric : public material
-{
-public:
-	float refractiveIndex = 1.5f;
-
-	bool scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, float& pdf) const override;
-
-	virtual glm::vec3 brdf(const glm::vec3& viewDirection, const glm::vec3 lightDirection, const glm::vec3& normal) const override;
-};

@@ -18,7 +18,7 @@ public:
 	ExampleLayer()
 		: m_Camera(60.0f, 0.1f, 100.0f) 
 	{
-		m_Scene.materials.emplace_back(std::make_unique<diffuse>());
+		m_Scene.materials.emplace_back(std::make_unique<emissive>());
 	}
 
 	virtual void OnUpdate(float ts)
@@ -78,11 +78,6 @@ public:
 						{
 							ImGui::DragFloat("Intensity", &emissive_material->emissionStrength, 0.05f, 1.0f, 50.0f);
 						}
-						if (auto* dielectric_material = dynamic_cast<dielectric*>(material))
-						{
-							ImGui::DragFloat("IOR", &dielectric_material->refractiveIndex, 0.05f, 1.0f, 2.5f);
-							ImGui::DragFloat("Roughness", &dielectric_material->roughness, 0.05f, 0.001f, 1.0f);
-						}
 
 						ImGui::Separator();
 					}
@@ -110,11 +105,6 @@ public:
 					if (ImGui::Button("Emissive"))
 					{
 						m_Scene.materials.emplace_back(std::make_unique<emissive>());
-						ImGui::CloseCurrentPopup();
-					}
-					if (ImGui::Button("Dielectric"))
-					{
-						m_Scene.materials.emplace_back(std::make_unique<dielectric>());
 						ImGui::CloseCurrentPopup();
 					}
 
