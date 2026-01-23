@@ -6,13 +6,13 @@ namespace BRDF
 {
 	inline float distributionGGX(float cosTheta, float roughness)
 	{
-		float roughnessSquared = roughness * roughness;
+		float a = roughness * roughness;
+		float a2 = a * a;
 		float cosThetaSquared = cosTheta * cosTheta;
-		float denominator = cosThetaSquared * (roughnessSquared - 1.0f) + 1.0f;
-		denominator *= denominator;
+		float denominator = cosThetaSquared * (a2 - 1.0f) + 1.0f;
+		denominator *= denominator * glm::pi<float>();
 
-		const float c = roughnessSquared * glm::one_over_pi<float>();
-		return c / denominator;
+		return a2 / denominator;
 	}
 
 	inline glm::vec3 fresnelSchlick(float cosTheta, const glm::vec3 F0)
@@ -27,8 +27,9 @@ namespace BRDF
 
 	inline float geometrySmith(float dotNV, float dotNL, float roughness)
 	{
-		float r = (roughness + 1.0f);
-		float k = (r * r) / 8.0f;
+		float remappedRoughness = 0.5f + roughness * 0.5f;
+		float a = remappedRoughness * remappedRoughness;
+		float k = a / 2.0f;
 
 		return geometrySchlickGGXG1(dotNV, k) * geometrySchlickGGXG1(dotNL, k);
 	}

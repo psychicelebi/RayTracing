@@ -64,17 +64,19 @@ public:
 					if (i == 0)
 						header_title = "Default Material";
 
-					material* material = m_Scene.materials[i].get();
+					auto& material = m_Scene.materials[i];
 
 					if (ImGui::CollapsingHeader(header_title.c_str()))
 					{
 						ImGui::ColorEdit3("Colour", glm::value_ptr(material->baseColour));
 
-						if (auto* metal_material = dynamic_cast<metal*>(material))
-						{
-							ImGui::DragFloat("Roughness", &metal_material->roughness, 0.05f, 0.001f, 1.0f);
-						}
-						if (auto* emissive_material = dynamic_cast<emissive*>(material))
+						ImGui::DragFloat("Metallic", &material->metallic, 0.05f, 0.001f, 1.0f);
+
+						ImGui::DragFloat("Roughness", &material->roughness, 0.05f, 0.001f, 1.0f);
+
+						ImGui::DragFloat("Specular", &material->specular, 0.05f, 0.001f, 1.0f);
+
+						if (auto* emissive_material = dynamic_cast<emissive*>(material.get()))
 						{
 							ImGui::DragFloat("Intensity", &emissive_material->emissionStrength, 0.05f, 1.0f, 50.0f);
 						}
@@ -90,18 +92,11 @@ public:
 
 				if (ImGui::BeginPopup("Select Material"))
 				{
-					if (ImGui::Button("Metal"))
+					if (ImGui::Button("Non-Emissive"))
 					{
-						m_Scene.materials.emplace_back(std::make_unique<metal>());
+						m_Scene.materials.emplace_back(std::make_unique<material>());
 						ImGui::CloseCurrentPopup();
 					}
-
-					if (ImGui::Button("Diffuse"))
-					{
-						m_Scene.materials.emplace_back(std::make_unique<diffuse>());
-						ImGui::CloseCurrentPopup();
-					}
-
 					if (ImGui::Button("Emissive"))
 					{
 						m_Scene.materials.emplace_back(std::make_unique<emissive>());
