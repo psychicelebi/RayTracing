@@ -87,7 +87,7 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 	glm::vec3 radiance{ 0.0f };
 	glm::vec3 throughput{ 1.0f };
 
-	for (int i = 0; i < m_settings.rayDepth; i++)
+	for (int bounce = 0; bounce < m_settings.rayDepth; bounce++)
 	{
 		hit_info hitInfo = m_activeScene->traceRay(currentRay);
 
@@ -119,20 +119,18 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 		if (material->scatter(currentRay, scatteredRay, hitInfo, pdf))
 		{
 			glm::vec3 brdf = material->brdf(-currentRay.direction, scatteredRay.direction, hitInfo.worldNormal);
-			float cosTheta = glm::dot(hitInfo.worldNormal, scatteredRay.direction);
+			float cosTheta = glm::max(0.0f, glm::dot(hitInfo.worldNormal, scatteredRay.direction));
 
-			throughput *= (brdf * glm::abs(cosTheta)) / pdf;
+			throughput *= (brdf * cosTheta) / pdf;
 			currentRay = scatteredRay;
 		}
 		else 
 		{
 			break;
 		}
-
-		if (glm::length(throughput) < 0.01f) break;
 	}
 
-	return { radiance, 1.0f };
+	return { glm::min(radiance, glm::vec3(10.0f)), 1.0f};
 }
 
 void renderer::renderPixel(uint32_t x, uint32_t y)
