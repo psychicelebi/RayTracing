@@ -26,7 +26,7 @@ bool material::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, f
 	if (Random::getReal(0.0f, 1.0f) < specularChance)
 	{
 		// specular lobe
-		glm::vec3 halfVector = getHalfVector(hitInfo.worldNormal);
+		glm::vec3 halfVector = getHalfVector(hitInfo.worldNormal, viewDirection);
 		glm::vec3 lightDirection = glm::reflect(-viewDirection, halfVector);
 
 		float dotNL = glm::dot(hitInfo.worldNormal, lightDirection);
@@ -36,9 +36,12 @@ bool material::scatter(const ray& rayIn, ray& rayOut, const hit_info& hitInfo, f
 
 		float dotNH = glm::max(0.0f, glm::dot(hitInfo.worldNormal, halfVector));
 		float dotLH = glm::max(0.0f, glm::dot(lightDirection, halfVector));
-		float D = BRDF::distributionGGX(dotNH, roughness);
+		dotNV = glm::max(1e-5f, dotNV);
 
-		float specPDF = (D * dotNH) / (4.0f * dotLH);
+		float D = BRDF::distributionGGX(dotNH, roughness);
+		float G1 = BRDF::geometrySchlickGGXG1(dotNV, roughness * roughness);
+
+		float specPDF = (D * G1) / (4.0f * dotNV);
 		pdf = specPDF * specularChance;
 	}
 	else
@@ -88,10 +91,10 @@ glm::vec3 material::brdf(const glm::vec3& viewDirection, const glm::vec3& lightD
 	return diffuseComponent + specularComponent;
 }
 
-glm::vec3 material::getHalfVector(const glm::vec3& normal) const
+glm::vec3 material::getHalfVector(const glm::vec3& normal, const glm::vec3& viewDirection) const
 {
 	float u1 = Random::getReal(0.0f, 1.0f);
 	float u2 = Random::getReal(0.0f, 1.0f);
 
-	return BRDF::sampleGGX(normal, roughness, u1, u2);
+	return BRDF::sampleGGXVNDF(normal,viewDirection, roughness, u1, u2);
 }

@@ -37,8 +37,6 @@ namespace BRDF
 		float b = dotNL * glm::sqrt(alpha2 + dotNV * (dotNV - alpha2 * dotNV));
 
 		return 0.5f / (a + b);
-
-		return geometrySchlickGGXG1(dotNV, alpha2) * geometrySchlickGGXG1(dotNL, alpha2);
 	}
 
 	inline glm::vec3 sampleGGX(glm::vec3 normal, float roughness, float u1, float u2)
@@ -59,5 +57,32 @@ namespace BRDF
 		glm::vec3 bitangent = glm::cross(normal, tangent);
 
 		return glm::mat3(tangent, bitangent, normal) * hLocal;
+	}
+
+	inline glm::vec3 sampleGGXVNDF(glm::vec3 normal, glm::vec3 viewDirection, float roughness, float u1, float u2)
+	{
+		glm::vec3 helper = (glm::abs(normal.x) > 0.9f) ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
+		glm::vec3 tangent = glm::normalize(glm::cross(helper, normal));
+		glm::vec3 bitangent = glm::cross(normal, tangent);
+		glm::mat3 TBN = glm::mat3(tangent, bitangent, normal);
+
+		glm::vec3 ve = glm::transpose(TBN) * viewDirection;
+		glm::vec3 vh = glm::normalize(glm::vec3(roughness * ve.x, roughness * ve.y, ve.z));
+
+		float lensq = vh.x * vh.x + vh.y * vh.y;
+		glm::vec3 T1 = lensq > 0.0f ? glm::vec3(-vh.y, vh.x, 0.0f) / glm::sqrt(lensq) : glm::vec3(1.0f, 0.0f, 0.0f);
+		glm::vec3 T2 = glm::cross(vh, T1);
+
+		float r = glm::sqrt(u1);
+		float phi = 2.0f * glm::pi<float>() * u2;
+		float t1 = r * glm::cos(phi);
+		float t2 = r * glm::sin(phi);
+		float s = 0.5f * (1.0f + vh.z);
+		t2 = glm::mix(glm::sqrt(1.0f - t1 * t1), t2, s);
+
+		glm::vec3 nh = t1 * T1 + t2 * T2 + glm::sqrt(glm::max(0.0f, 1.0f - t1 * t1 - t2 * t2)) * vh;
+		glm::vec3 hLocal = glm::normalize(glm::vec3(roughness * nh.x, roughness * nh.y, glm::max(0.0f, nh.z)));
+
+		return glm::normalize(TBN * hLocal);
 	}
 }

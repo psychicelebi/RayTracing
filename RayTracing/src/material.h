@@ -19,7 +19,7 @@ public:
 
 	virtual glm::vec3 emitted() const { return glm::vec3(0.0f); }
 
-	glm::vec3 getHalfVector(const glm::vec3& normal) const;
+	glm::vec3 getHalfVector(const glm::vec3& normal, const glm::vec3& viewDirection) const;
 
 };
 
