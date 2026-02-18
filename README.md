@@ -1,23 +1,19 @@
-# Ray Tracer
+# Path Tracer
 
 This is a software Path Tracer built as a learning project initially following [The Cherno's Ray Tracing series](https://youtube.com/playlist?list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl&si=ZwHQRIjvuAOiruBz) however it includes several enhancements and custom features to deepen my understanding of computer graphics and rendering. The goal is to understand the fundamentals of graphics programming (particularly ray tracing) and practise using C++.
 
 ## Features
-- Basic ray tracing: Supports spheres.
-- Lighting: Implements distant and spherical lights and support for multiple light sources.
-- Shadows: Casts shadows from objects.
-- Reflections: Recursive ray tracing for reflective surfaces.
-- Path Tracing: Monte Carlo sample accumulation for realistic indirect lighting.
-- Camera Controls: Move and rotate the camera to explore the scene interactively.
-- Interactive UI: Adjust scene parameters (e.g. materials, lighting etc) in real time.
-- Multi-threading: Uses multiple CPU cores for faster rendering.
-- Refraction: Simulates transparent materials with Fresnel-based light bending.
-- Anti-aliasing: Uses jittered sub-pixel sampling to smooth edges and reduce aliasing.
 
-## Planned Features
-
-- Basic acceleration structure (BVH) for faster rendering.
-- Area lights for more realistic lighting.
+- Path Tracing: Monte Carlo path tracing with progressive sample accumulation for realistic global illumination and indirect lighting.
+- Disney BRDF: Physically based shading model with per-material controls for base colour, roughness, metallic and specular.
+- Importance Sampling: GGX VNDF importance sampling for faster convergence and reduced noise.
+- Emissive Materials: Customisable emissive materials with adjustable colour and intensity.
+- Geometry: Scene composed of spheres with adjustable position and radius.
+- BVH Acceleration: Bounding Volume Hierarchy for efficient ray-scene intersection in large scenes.
+- Camera Controls: Freely moveable and rotatable camera for interactive scene exploration.
+- Anti-Aliasing: Jittered sub-pixel sampling to smooth edges and reduce aliasing.
+- Multi-threading: Multi-core CPU rendering for improved performance.
+- Interactive UI: Real-time parameter editing for materials, lighting and scene objects via an immediate-mode GUI.
 
 ## Screenshots
 
