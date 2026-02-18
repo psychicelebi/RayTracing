@@ -130,7 +130,7 @@ glm::vec4 renderer::shadePixel(uint32_t x, uint32_t y)
 		}
 	}
 
-	return { glm::min(radiance, glm::vec3(10.0f)), 1.0f};
+	return { radiance, 1.0f };
 }
 
 void renderer::renderPixel(uint32_t x, uint32_t y)
