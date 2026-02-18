@@ -17,19 +17,15 @@ This is a software Path Tracer built as a learning project initially following [
 
 ## Screenshots
 
-### Basic diffuse objects
-![Diffuse object](screenshots/diffuse.png)
-![Diffuse object 2](screenshots/diffuse-1.png)
-![Diffuse object 3](screenshots/diffuse-2.png)
+### Metal objects
+![Mirror object](screenshots/mirror.png)
+![Polished metal object](screenshots/polished%20metal.png)
+![Brushed metal object](screenshots/brushed%20metal.png)
+
+### Diffuse objects
+
+![Shiny plastic object](screenshots/shiny%20plastic.png)
+![Matte plastic object](screenshots/matte%20plastic.png)
 
 ### Multiple light sources
 ![Multiple Lights](screenshots/multiple%20lights.png)
-
-### Reflective objects/Metal materials
-![Reflection](screenshots/reflection.png)
-
-### Shadows
-![Shadows](screenshots/shadows.png)
-
-### Spherical light source
-![Spherical Light](screenshots/spherical%20light.png)
